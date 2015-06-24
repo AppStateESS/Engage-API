@@ -1,0 +1,43 @@
+<?php
+/**
+   * Example config file for orgsync api script. 
+   *
+   *@author - Ted Eberhard
+   *
+   *
+   */
+define("ORGSYNC_KEY", '');
+define("BASE_URL", 'https://api.orgsync.com/api/v2/');
+define("DB_USER", ‘db_user’);
+define("DB_PASS", ‘db_pass’);
+define("DB_HOST", 'localhost');
+define("CSIL_ID", 12345); // this is used to limit to just coil umbrella
+define("FRATERNITY", 100);
+define("SORORITY", 101);
+define("BANNER_ELEMENT_ID", 1300096);
+define("GENDER_ELEMENT_ID", 1300091);
+define("ETHNICITY_ELEMENT_ID", 1300097);
+define("INTERNATIONAL_STUDENT_ELEMENT_ID", 1300100);
+define("TRANSFER_STUDENT_ELEMENT_ID", 1300101);
+define("CLASSIFICATION_ELEMENT_ID", 1300092);
+define("PRESIDENT_ELEMENT_ID", 1300108);
+define("PRESIDENT_EMAIL_ELEMENT_ID", 1352027);
+define("OFFICER2_ELEMENT_ID", 1300114);
+define("OFFICER2_EMAIL_ELEMENT_ID", 1300115);
+define("OFFICER3_ELEMENT_ID", 1300118);
+define("OFFICER3_EMAIL_ELEMENT_ID", 1300119);
+define("OFFICER4_ELEMENT_ID", 1300122);
+define("OFFICER4_EMAIL_ELEMENT_ID", 1300123);
+define("TREASURER_ELEMENT_ID", 1393998);
+define("TREASURER_EMAIL_ELEMENT_ID", 1393999);
+define("ADVISOR_ELEMENT_ID", 1300125);
+define("ADVISOR_EMAIL_ELEMENT_ID", 1300126);
+define("ORGSYNC_NEW_MEMBER_GROUP", "New Members");
+define("ORGSYNC_OFFICER_GROUP", "Officers");
+define("PRESIDENT_ROLE", 34);
+define("VP_ROLE", 47);
+define("OFFICER_ROLE", 24);
+define("TREASURER_ROLE", 45);
+define("ADVISOR_ROLE", 53);
+define("NEW_MEMBER_ROLE", 32);
+?>
