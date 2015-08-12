@@ -698,6 +698,23 @@ function getOrgMembers($org_id){
   return $org_members;
 }
 
+function getIDFromEmail($email){
+    global $key, $base_url;    
+
+    $curl = curl_init();
+    curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $base_url."accounts/email/$email?key=$key"));
+    $result = curl_exec($curl);
+    curl_close($curl);
+
+    if($result){
+        $result = json_decode($result);
+        if(!empty($result->id))
+            return $result->id;
+    }
+    
+    return false;
+}
+
 function getAllAccounts(){
   global $key, $base_url;
   $curl = curl_init();

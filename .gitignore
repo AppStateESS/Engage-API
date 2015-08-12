@@ -1,0 +1,7 @@
+auto-save-list
+\#*
+*~
+.#*
+\#*\#
+*.csv
+sdr_sync.conf
