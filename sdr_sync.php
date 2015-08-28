@@ -787,7 +787,8 @@ function getGreekType($org_id){
     $org_type = '';
 
     foreach($members as $member){
-      $account = getAccountByID($member->id);
+        $member_id = $member->id;
+      $account = getAccountByID($member_id);
       if($account->profile_responses[3]->element->name != 'Gender'){
 	foreach($account->profile_responses as $value){
 	  if($value->element->name == 'Gender')
