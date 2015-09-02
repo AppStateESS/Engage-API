@@ -28,7 +28,7 @@ $import = file($argv[1]);
 $portal_id = NULL;
 $user_ids = array();
 $sec_portal_id = NULL;
-$clear_organization = 1;  // if you want to remove all members to reset organization roster before import
+$clear_organization = 0;  // if you want to remove all members to reset organization roster before import
 $missing_acct = 0;
 
 // This block of code outside of the functions is for use with command line.  It takes an input of a csv file and processes the entries and puts users into specified portals.  It will clear the roster first if $clear_organization is 1.  You will need to format the csv file correctly and make sure the column numbers are correct for the $line array calls.
