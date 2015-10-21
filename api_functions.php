@@ -25,14 +25,92 @@ if(!isset($_SERVER["argv"][1])){
 }
     
 $import = file($argv[1]);
+$group_id = 359151;
+$clear_organization = 0;  // if you want to remove all members to reset organization roster before import
+$clear_group = 0;  // Not functional yet but if you want to remove all members to reset a group before import this is what you will need
+
+groupImportController($import, $group_id, $clear_group);
+//orgImportController($import, $clear_organization);
+
+function groupImportController($import, $group_id, $clear_group) { 
+
+$user_ids = array();
+$missing_acct = 0;
+$acct_count = 0;
+
+foreach($import as $value){
+    $line = explode(',',$value);
+    $acct_count++;
+    $email = $line[1];
+    $user_id = getIDFromUsername($email);
+
+    if(!$user_id){
+        echo "could not find account: $email. Attempting to create account"."\r\n";
+        $first_name = $line[2];
+        $last_name = $line[3];
+        $banner_id = $line[4];
+        if(!addAccount($email, $first_name, $last_name, $banner_id))
+            echo "Add account failed."."\n";
+        $missing_acct++;
+    }else{
+        $user_ids[] = $user_id;
+    }
+    if($acct_count >= 200){
+        if($clear_group){
+            echo "clearing members";
+            $members = getGroupMembers($group_id); // This function is not complete yet
+            $ids = array();
+            foreach($members as $value){
+                $ids[] = $value->id;
+            }
+            if(!removeGroupAccount($ids, $group_id))
+                echo "group roster reset failed"."\n";
+            $clear_organization = 0;
+        }
+        echo "importing members";
+        $import_result = userToGroup($user_ids, $group_id);
+        $import_try = 0;
+        while(!$import_result && $import_try < 10){
+            $import_result = userToGroup($user_ids, $group_id);
+            $import_try++;
+        }
+        if(!$import_result)
+            echo "import failed for \n".var_dump($user_ids);
+        else
+            echo "Import sucess";
+        $acct_count = 0;
+        unset($user_ids);
+    }
+}
+
+if($clear_group){
+    echo "clearing members";
+    $members = getGroupMembers($org_id);
+    $ids = array();
+    foreach($members as $value){
+        $ids[] = $value->id;
+    }
+    if(!removeGroupAccount($ids, $org_id))
+        echo "Group roster reset failed"."\n";
+}
+echo "importing members";
+$import_result = userToGroup($user_ids, $group_id);
+if(!$import_result)
+    echo "import failed";
+else
+    echo "Import sucess";
+
+echo "number of missing accounts is $missing_acct"."\n";
+}
+
+function orgImportController($import, $clear_organization) { 
+// This block of code outside of the functions is for use with command line.  It takes an input of a csv file and processes the entries and puts users into specified portals.  It will clear the roster first if $clear_organization is 1.  You will need to format the csv file correctly and make sure the column numbers are correct for the $line array calls.
 $portal_id = NULL;
 $user_ids = array();
 $sec_portal_id = NULL;
-$clear_organization = 0;  // if you want to remove all members to reset organization roster before import
 $missing_acct = 0;
-
-// This block of code outside of the functions is for use with command line.  It takes an input of a csv file and processes the entries and puts users into specified portals.  It will clear the roster first if $clear_organization is 1.  You will need to format the csv file correctly and make sure the column numbers are correct for the $line array calls.
 $acct_count = 0;
+
 foreach($import as $value){
     $line = explode(',',$value);
     $acct_count++;
@@ -97,6 +175,7 @@ foreach($import as $value){
         else
             echo "Import sucess";
         $acct_count = 0;
+        unset($user_ids);
     }
 }
 
@@ -120,7 +199,7 @@ if(!empty($sec_org_id))
     $import_result = userToOrg($user_ids, $sec_org_id);
 
 echo "number of missing accounts is $missing_acct"."\n";
-exit;
+}
 
 /**
  * Place a user or users into an organization. User can be a single user id or and array of ids
@@ -159,6 +238,51 @@ function userToOrg($user_id, $org_id){
     }else{
         return FALSE;
     }
+
+}
+
+/**
+ * Place a user or users into a group. User can be a single user id or and array of ids
+ *
+ * @param int $user_id (can be array of user id's), int $group_id (groups id)
+ * @return boolean (success or not)
+ */
+function userToGroup($user_id, $group_id){
+    global $key, $base_url;
+    $ids = NULL;
+    $import_url = '';
+    if(is_array($user_id)){
+        foreach($user_id as $value){
+            if(!empty($ids))
+                $ids .= ",$value";
+            else
+                $ids = $value;
+        }
+    }else{
+        $ids = $user_id;
+    }
+    $import_url = $base_url."groups/$group_id/accounts/add";
+    echo $import_url;
+    $curl = curl_init();
+    curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $import_url, CURLOPT_POST => 1, CURLOPT_POSTFIELDS => "ids=$ids&key=$key"));
+
+    $result = curl_exec($curl);
+    curl_close($curl);
+    echo var_dump($result); // need to put this result to log
+
+    if($result){
+        $result = json_decode($result);
+        if(is_object($result) && $result->success == "true")
+            return TRUE;
+        else
+            return FALSE;
+    }else{
+        return FALSE;
+    }
+
+}
+
+function getGroupMembers($group_id) {
 
 }
 
@@ -207,6 +331,10 @@ function removeAccount($user_ids, $org_id){
             return FALSE;
         
     }
+}
+
+function removeGroupAccount($user_ids, $group_id){
+
 }
 
 /**
