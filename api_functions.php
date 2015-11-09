@@ -25,9 +25,9 @@ if(!isset($_SERVER["argv"][1])){
 }
     
 $import = file($argv[1]);
-$group_id = 359151;
+$group_id = 474309; //474307(undergrad) 474308(grad) 474310(undergrad and grad) 474309(facutly and staff
 $clear_organization = 0;  // if you want to remove all members to reset organization roster before import
-$clear_group = 0;  // Not functional yet but if you want to remove all members to reset a group before import this is what you will need
+$clear_group = 0;  //if you want to remove all members to reset a group before import this is what you will need
 
 groupImportController($import, $group_id, $clear_group);
 //orgImportController($import, $clear_organization);
@@ -37,6 +37,18 @@ function groupImportController($import, $group_id, $clear_group) {
 $user_ids = array();
 $missing_acct = 0;
 $acct_count = 0;
+$failed_accounts = array();
+
+if($clear_group){
+    echo "clearing members";
+    $members = getGroupMembers($group_id);
+    $ids = array();
+    foreach($members as $value){
+        $ids[] = $value->id;
+    }
+    if(!removeGroupAccount($ids, $group_id))
+        echo "Group roster reset failed"."\n";
+}
 
 foreach($import as $value){
     $line = explode(',',$value);
@@ -49,24 +61,15 @@ foreach($import as $value){
         $first_name = $line[2];
         $last_name = $line[3];
         $banner_id = $line[4];
-        if(!addAccount($email, $first_name, $last_name, $banner_id))
+        if(!addAccount($email, $first_name, $last_name, $banner_id)){
             echo "Add account failed."."\n";
+            $failed_accounts[] = "$email,$first_name,$last_name,$banner_id";
+        }
         $missing_acct++;
     }else{
         $user_ids[] = $user_id;
     }
     if($acct_count >= 200){
-        if($clear_group){
-            echo "clearing members";
-            $members = getGroupMembers($group_id); // This function is not complete yet
-            $ids = array();
-            foreach($members as $value){
-                $ids[] = $value->id;
-            }
-            if(!removeGroupAccount($ids, $group_id))
-                echo "group roster reset failed"."\n";
-            $clear_organization = 0;
-        }
         echo "importing members";
         $import_result = userToGroup($user_ids, $group_id);
         $import_try = 0;
@@ -83,16 +86,6 @@ foreach($import as $value){
     }
 }
 
-if($clear_group){
-    echo "clearing members";
-    $members = getGroupMembers($org_id);
-    $ids = array();
-    foreach($members as $value){
-        $ids[] = $value->id;
-    }
-    if(!removeGroupAccount($ids, $org_id))
-        echo "Group roster reset failed"."\n";
-}
 echo "importing members";
 $import_result = userToGroup($user_ids, $group_id);
 if(!$import_result)
@@ -101,6 +94,8 @@ else
     echo "Import sucess";
 
 echo "number of missing accounts is $missing_acct"."\n";
+echo "Failed account creation"."\n";
+echo var_dump($failed_accounts);
 }
 
 function orgImportController($import, $clear_organization) { 
@@ -283,7 +278,18 @@ function userToGroup($user_id, $group_id){
 }
 
 function getGroupMembers($group_id) {
-
+  global $key, $base_url;
+  $curl = curl_init();
+  //get organization members by organization id
+  curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $base_url."groups/$group_id/accounts?key=$key"));
+  $group_members = curl_exec($curl);
+  if($group_members){
+    $group_members = json_decode($group_members);
+  }else{
+    $group_members = FALSE;
+  }
+  curl_close($curl);
+  return $group_members;
 }
 
 function getOrgMembers($org_id){
@@ -334,7 +340,38 @@ function removeAccount($user_ids, $org_id){
 }
 
 function removeGroupAccount($user_ids, $group_id){
-
+    global $key, $base_url;
+    $ids = '';
+    $count = 0;
+    $url = $base_url."/groups/$group_id/accounts/remove";
+    $curl = curl_init();
+// orgsync's server can't handle large add or removes.  We are going to send chunks of 300
+    if(is_array($user_ids)){
+        foreach($user_ids as $value){
+            if(!empty($ids))
+                $ids .= ',';
+            $ids .= $value;
+            $count++;
+            if($count >=300){
+                curl_setopt_array($curl, array(CURLOPT_TIMEOUT => 900, CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $url, CURLOPT_POST => 1, CURLOPT_POSTFIELDS => "ids=$ids&key=$key"));           
+                $result = curl_exec($curl); // need to handle error checking here and log the event if these individual calls fail.
+                $ids = '';
+                $count = 0;
+            }
+        }
+    }
+    curl_setopt_array($curl, array(CURLOPT_TIMEOUT => 900, CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $url, CURLOPT_POST => 1, CURLOPT_POSTFIELDS => "ids=$ids&key=$key"));
+    $result = curl_exec($curl); 
+    curl_close($curl);
+    echo var_dump($result); // need to put this in log
+    if($result){
+        $result = json_decode($result);
+        if(is_object($result) && $result->success == "true")
+            return TRUE;
+        else
+            return FALSE;
+        
+    }
 }
 
 /**
