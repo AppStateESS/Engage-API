@@ -156,48 +156,67 @@ function updateOrgRoles($org, $sdr_org_id){
 	break;
       } 
   }
-  
-  $president = getBannerIDFromEmail($president_email);
-  if(!empty($president_email) && !$president)
-    $org_role_error .= "There was a problem mapping a member to $org->short_name president role. Org id is $org->id . Member email address is $president_email. Member name is $president_name."."\r\n";
-  if($president){
-    $officers_ids[$president] = 'president';
-  }
-  $officer2 = getBannerIDFromEmail($officer2_email);
-  if(!empty($officer2_email) && !$officer2)
-    $org_role_error .= "There was a problem mapping a member to $org->short_name vice president role. Org id is $org->id . Member email address is $officer2_email. Member name is $officer2_name."."\r\n";
-  if($officer2){
-    $officers_ids[$officer2] = 'officer2';
-  }
 
-  $officer3 = getBannerIDFromEmail($officer3_email);
-  if(!empty($officer3_email) && !$officer3)
-    $org_role_error .= "There was a problem mapping a member to $org->short_name officer3 role. Org id is $org->id . Member email address is $officer3_email. Member name is $officer3_name."."\r\n";
-  if($officer3){
-    $officers_ids[$officer3] = 'officer3';
+  if(!empty($president_email)){  
+    $president = getBannerIDFromEmail($president_email);
+    if(!$president){
+      $org_role_error .= "There was a problem mapping a member to $org->short_name president role. Org id is $org->id . Member email address is $president_email. Member name is $president_name."."\r\n";
+    }else{
+      $officers_ids[$president] = 'president';
+    }
+  }else{
+    $org_role_error .= "$org->short_name president email is blank."."\r\n";
   }
-
-  $officer4 = getBannerIDFromEmail($officer4_email);
-  if(!empty($officer4_email) && !$officer4)
-    $org_role_error .= "There was a problem mapping a member to $org->short_name officer4 role. Org id is $org->id . Member email address is $officer4_email. Member name is $officer4_name."."\r\n";
-  if($officer4){
-    $officers_ids[$officer4] = 'officer4';
+  if(!empty($officer2_email)){
+    $officer2 = getBannerIDFromEmail($officer2_email);
+    if(!$officer2){
+      $org_role_error .= "There was a problem mapping a member to $org->short_name vice president role. Org id is $org->id . Member email address is $officer2_email. Member name is $officer2_name."."\r\n";
+    }else{
+      $officers_ids[$officer2] = 'officer2';
+    }
+  }else{
+    $org_role_error .= "$org->short_name officer 2 email is blank."."\r\n";
   }
-
-  $treasurer = getBannerIDFromEmail($treasurer_email);
-  if(!empty($treasurer_email) && !$treasurer)
-    $org_role_error .= "There was a problem mapping a member to $org->short_name treasurer role. Org id is $org->id . Member email address is $treasurer_email. Member name is $treasurer_name."."\r\n";
-  if($treasurer){
-    $officers_ids[$treasurer] = 'treasurer';
+  if(!empty($officer3_email)){
+    $officer3 = getBannerIDFromEmail($officer3_email);
+    if(!$officer3){
+      $org_role_error .= "There was a problem mapping a member to $org->short_name officer3 role. Org id is $org->id . Member email address is $officer3_email. Member name is $officer3_name."."\r\n";
+    }else{
+      $officers_ids[$officer3] = 'officer3';
+    }
+  }else{
+    $org_role_error .= "$org->short_name officer 3 email is blank."."\r\n";
   }
-
-  $advisor = getBannerIDFromEmail($advisor_email);
-  if(!empty($advisor_email) && !$advisor)
-    $org_role_error .= "There was a problem mapping a member to $org->short_name advisor role. Org id is $org->id . Member email address is $advisor_email. Member name is $advisor_name."."\r\n";
-  if($advisor){
-    $officers_ids[$advisor] = 'advisor';
+  if(!empty($officer4_email)){
+    $officer4 = getBannerIDFromEmail($officer4_email);
+    if(!$officer4){
+      $org_role_error .= "There was a problem mapping a member to $org->short_name officer4 role. Org id is $org->id . Member email address is $officer4_email. Member name is $officer4_name."."\r\n";
+    }else{
+      $officers_ids[$officer4] = 'officer4';
+    }
+  }else{
+    $org_role_error .= "$org->short_name officer 4 email is blank."."\r\n";
   }
-
+  if(!empty($treasurer_email)){
+    $treasurer = getBannerIDFromEmail($treasurer_email);
+    if(!$treasurer){
+      $org_role_error .= "There was a problem mapping a member to $org->short_name treasurer role. Org id is $org->id . Member email address is $treasurer_email. Member name is $treasurer_name."."\r\n";
+    }else{
+      $officers_ids[$treasurer] = 'treasurer';
+    }
+  }else{
+    $org_role_error .= "$org->short_name treasurer email is blank."."\r\n";
+  }
+  if(!empty($advisor_email)){
+    $advisor = getBannerIDFromEmail($advisor_email);
+    if(!$advisor){
+      $org_role_error .= "There was a problem mapping a member to $org->short_name advisor role. Org id is $org->id . Member email address is $advisor_email. Member name is $advisor_name."."\r\n";
+    }else{
+      $officers_ids[$advisor] = 'advisor';
+    }
+  }else{
+    $org_role_error .= "$org->short_name advisor email is blank."."\r\n";
+  }
  
   foreach($groups as $group){
     if($group->name == ORGSYNC_NEW_MEMBER_GROUP && count($group->account_ids) > 0){
