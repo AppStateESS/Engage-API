@@ -13,6 +13,7 @@ $banner_base_url = BANNER_BASE_URL;
 $orgsync_base_url = BASE_URL;
 if(!isset($_SERVER["argv"][1])){
     echo "Usage: orientation_feed.php <portal-id> <term> "."\n";
+    exit();
 }else{
     $org_id = $argv[1];
     $term = $argv[2];
@@ -37,13 +38,12 @@ if($new_students){
         if($temp_id) // Make sure we have an id for the user. we will not worry about if a student does not have an account in orgsync. That will be the job for another script.
             $student_ids[] = $temp_id;
         if($student_count >= 200){
-            var_dump($student_ids);
-            //$add_result = userToOrg($student_ids, $org_id);
-            //if(!$add_result){
-                //echo "There was a problem with the import group.".var_dump($student_ids)."\n";
-            //}else{
-            //echo "import success"."\n";
-        //}
+            $add_result = userToOrg($student_ids, $org_id);
+            if(!$add_result){
+                echo "There was a problem with the import group.".var_dump($student_ids)."\n";
+            }else{
+                echo "import success"."\n";
+            }
             $student_count = 0;
             unset($student_ids);
         }
