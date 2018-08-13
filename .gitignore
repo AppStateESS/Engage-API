@@ -7,4 +7,4 @@ auto-save-list
 sdr_sync.conf
 *.gz
 *.log
-/nbproject/private/
+/nbproject

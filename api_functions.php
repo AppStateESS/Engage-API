@@ -1,10 +1,12 @@
+#!/usr/bin/php
 <?php
   /**
    * Ramdon functions for using OrgSync API.  As of now the whole file is just a way 
    * to move users into different portals given an input csv file.  csv file must have
-   * email address in the first column and portal id in the 4th.  Optionally you can 
+   * email address in the first column and portal id in the 4th for org imports.  Optionally you can 
    * have a secondary portal id in the 5th column. Or just rewrite the code to fit
-   * the format of your csv file.
+   * the format of your csv file. For group imports specify the group id as the 3rd command line
+   * argument. csv format for group import is email,firstname,lastname,banner_id.
    *
    * Eventually there will be more functions in here and I won't have just open code in here.
    * Also, all error echo's need to go to log instead output.
@@ -14,23 +16,26 @@
    *
    */
 
-include ("sdr_sync.conf");
+include ("/etc/ess/sdr_sync.conf");
 
 $key = ORGSYNC_KEY;
 $base_url = BASE_URL; 
+$banner_base_url = BANNER_BASE_URL;
 
-if(!isset($_SERVER["argv"][1])){
-    echo "You need to specify a data file";
+if(isset($argv) && !isset($argv[2])){
+    echo "Usage: api_function.php [input file] [clear group or org] [group id(optional)]";
     exit;
 }
     
 $import = file($argv[1]);
-$group_id = 474309; //474307(undergrad) 474308(grad) 474310(undergrad and grad) 474309(facutly and staff
-$clear_organization = 0;  // if you want to remove all members to reset organization roster before import
-$clear_group = 0;  //if you want to remove all members to reset a group before import this is what you will need
+$clear = $argv[2];  // if you want to remove all members to reset organization roster before import
 
-groupImportController($import, $group_id, $clear_group);
-//orgImportController($import, $clear_organization);
+if(isset($argv[3])){
+    $group_id = $argv[3]; //474307(undergrad) 474308(grad) 474310(undergrad and grad) 474309(facutly and staff
+    groupImportController($import, $group_id, $clear);
+}else{
+    orgImportController($import, $clear);
+}
 
 function groupImportController($import, $group_id, $clear_group) { 
 
@@ -53,14 +58,18 @@ if($clear_group){
 foreach($import as $value){
     $line = explode(',',$value);
     $acct_count++;
-    $email = $line[1];
+    $email = trim($line[2]);
     $user_id = getIDFromUsername($email);
 
     if(!$user_id){
         echo "could not find account: $email. Attempting to create account"."\r\n";
-        $first_name = $line[2];
-        $last_name = $line[3];
-        $banner_id = $line[4];
+	$last_name = trim($line[0]);
+	$first_name = trim($line[1]);
+    $banner_id = trim($line[3]);
+	if(empty($banner_id)){
+        $banner_id = getStudentBannerID($email);
+	}
+
         if(!addAccount($email, $first_name, $last_name, $banner_id)){
             echo "Add account failed."."\n";
             $failed_accounts[] = "$email,$first_name,$last_name,$banner_id";
@@ -70,7 +79,7 @@ foreach($import as $value){
         $user_ids[] = $user_id;
     }
     if($acct_count >= 200){
-        echo "importing members";
+        echo "importing members"."\n";
         $import_result = userToGroup($user_ids, $group_id);
         $import_try = 0;
         while(!$import_result && $import_try < 10){
@@ -80,19 +89,21 @@ foreach($import as $value){
         if(!$import_result)
             echo "import failed for \n".var_dump($user_ids);
         else
-            echo "Import sucess";
+            echo "Import sucess"."\n";
         $acct_count = 0;
         unset($user_ids);
     }
+
 }
 
-echo "importing members";
+echo "importing members"."\n";
 $import_result = userToGroup($user_ids, $group_id);
 if(!$import_result)
     echo "import failed";
 else
     echo "Import sucess";
-
+echo "\n";
+    
 echo "number of missing accounts is $missing_acct"."\n";
 echo "Failed account creation"."\n";
 echo var_dump($failed_accounts);
@@ -314,17 +325,27 @@ function getOrgMembers($org_id){
  */
 function removeAccount($user_ids, $org_id){
     global $key, $base_url;
+    $url = $base_url."/orgs/$org_id/accounts/remove";
+    $curl = curl_init();
+    $count = 0;	 
     $ids = '';
     if(is_array($user_ids)){
         foreach($user_ids as $value){
             if(!empty($ids))
                 $ids .= ',';
             $ids .= $value;
+            $count++;
+            if($count >=300){ // orgsync can't hadle large groups of remove so limit it to 300 per api call
+                curl_setopt_array($curl, array(CURLOPT_TIMEOUT => 900, CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $url, CURLOPT_POST => 1, CURLOPT_POSTFIELDS => "ids=$ids&key=$key"));           
+                $result = curl_exec($curl); // need to handle error checking here and log the event if these individual calls fail.
+                $ids = '';
+                $count = 0;
+            }
         }
+    }else{
+    $ids = $user_ids;
     }
 
-    $url = $base_url."/orgs/$org_id/accounts/remove";
-    $curl = curl_init();
     curl_setopt_array($curl, array(CURLOPT_TIMEOUT => 900, CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $url, CURLOPT_POST => 1, CURLOPT_POSTFIELDS => "ids=$ids&key=$key"));           
     $result = curl_exec($curl); 
     curl_close($curl);
@@ -400,6 +421,18 @@ function addAccount($username, $first_name, $last_name, $student_id, $send_welco
             return FALSE;
         }
     }
+}
+
+function getStudentBannerID($email){
+    global $banner_base_url;
+    $email = explode('@',$email);
+    $username = $email[0];
+    $curl = curl_init();
+    curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $banner_base_url."student/$username"));
+    $result = curl_exec($curl);
+    curl_close($curl);
+    $student = json_decode($result);
+    return $student->ID;
 }
 
 function getIDFromUsername($username){
