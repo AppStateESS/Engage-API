@@ -21,6 +21,17 @@ include ("/etc/ess/sdr_sync.conf");
 $key = ORGSYNC_KEY;
 $base_url = BASE_URL; 
 $banner_base_url = BANNER_BASE_URL;
+$org_id = 103391;
+
+/*
+ * example of deleting account
+ */
+//$email = "hayesvj@appstate.edu";
+//$account_id = getIDFromEmail($email);
+//$account = getAccountByID($account_id);
+//deleteAccount($account_id);
+//exit;
+ 
 
 if(isset($argv) && !isset($argv[2])){
     echo "Usage: api_function.php [input file] [clear group or org] [group id(optional)]";
@@ -66,8 +77,11 @@ foreach($import as $value){
 	$last_name = trim($line[0]);
 	$first_name = trim($line[1]);
     $banner_id = trim($line[3]);
-	if(empty($banner_id)){
-        $banner_id = getStudentBannerID($email);
+	if(empty($banner_id) || empty($last_name)){
+        $student = getStudentFromBanner($email,$banner_id);
+        $banner_id = $student->ID;
+        $last_name = $student->lastName;
+        $first_name = $student->firstName;
 	}
 
         if(!addAccount($email, $first_name, $last_name, $banner_id)){
@@ -423,16 +437,46 @@ function addAccount($username, $first_name, $last_name, $student_id, $send_welco
     }
 }
 
-function getStudentBannerID($email){
-    global $banner_base_url;
-    $email = explode('@',$email);
-    $username = $email[0];
+/**
+ * Remove an account to OrgSync. 
+ *
+ *
+ */
+function deleteAccount($account_id){
+    global $key, $base_url;
+    
+    $json_data = array("account_id" => $account_id);
+    $json_data = json_encode($json_data);
+    $url = $base_url."/accounts/$account_id?key=$key";
     $curl = curl_init();
-    curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $banner_base_url."student/$username"));
+    curl_setopt_array($curl, array(CURLOPT_CUSTOMREQUEST => "DELETE", CURLOPT_TIMEOUT => 900, CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $url));           
+    $result = curl_exec($curl); 
+    curl_close($curl);
+    if($result){
+        $result = json_decode($result);
+        if($result->$success){
+            return TRUE;
+        }else{
+            echo var_dump($result); //need to write this to log instead of echo
+            return FALSE;
+        }
+    }
+}
+
+function getStudentFromBanner($email, $banner_id){
+    global $banner_base_url;
+    if(empty($banner_id)){
+        $email = explode('@',$email);
+        $user_id = $email[0];
+    }else{
+        $user_id = $banner_id;
+    }
+    $curl = curl_init();
+    curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $banner_base_url."student/$user_id"));
     $result = curl_exec($curl);
     curl_close($curl);
     $student = json_decode($result);
-    return $student->ID;
+    return $student;
 }
 
 function getIDFromUsername($username){
@@ -469,5 +513,20 @@ function getIDFromEmail($email){
     
     return false;
     
+}
+
+function getAccountByID($id){
+  global $key, $base_url;
+  $curl = curl_init();
+  curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $base_url."accounts/$id?key=$key"));
+    $account_result = curl_exec($curl);
+    
+  if($account_result)
+    $account_result = json_decode($account_result);
+  else
+    $account_result = FALSE;
+  
+  curl_close($curl);  
+  return $account_result;
 }
 ?>
