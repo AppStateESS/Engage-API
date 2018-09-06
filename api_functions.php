@@ -154,7 +154,7 @@ foreach($import as $value){
         unset($user_ids);
         $sec_org_id = NULL;
     }
-    $email = $line[0];
+    $email = $line[2];
     $user_id = getIDFromUsername($email);
     $org_id = $line[4];// column in csv file where org id is
     $org_id = str_replace(PHP_EOL, '', $org_id);
@@ -168,8 +168,14 @@ foreach($import as $value){
         echo "could not find account: $email. Attempting to create account"."\r\n";
         $temp_name = explode(" ",trim($line[2]));
         $first_name = $temp_name[0];
-        $last_name = $line[3];
-        $banner_id = $line[1];
+        $last_name = $line[1];
+        $banner_id = $line[3];
+        if(empty($banner_id) || empty($last_name)){
+            $student = getStudentFromBanner($email,$banner_id);
+            $banner_id = $student->ID;
+            $last_name = $student->lastName;
+            $first_name = $student->firstName;
+        }
         if(!addAccount($email, $first_name, $last_name, $banner_id))
             echo "Add account failed."."\n";
         $missing_acct++;
