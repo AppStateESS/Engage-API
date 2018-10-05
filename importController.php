@@ -63,6 +63,13 @@ if (isset($argv[3])) {
     orgImportController($import, $clear);
 }
 
+/**
+ * Controls importing users into groups. Used if your just importing a csv file into 1 group that you specify on the command line.
+ *** This function may be obsolete with the most recent changes to the orgImportController ***
+ * @param array $import (the input file in and array), int group_id (id of the group to import), boolean $clear_group (do we want to clear the group first. Users will still be in the portal)
+ * 
+ */
+
 function groupImportController($import, $group_id, $clear_group) {
 
     $user_ids = array();
@@ -147,8 +154,14 @@ function groupImportController($import, $group_id, $clear_group) {
     echo var_dump($failed_accounts);
 }
 
+/**
+ * Controls importing users into orgs/groups. Can handle multiple orgs and groups in one file
+ *
+ * @param array $import (the import input file in an array), boolean $clear_organization (to clear the organizations before importing)
+ * 
+ */
+
 function orgImportController($import, $clear_organization) {
-// This block of code outside of the functions is for use with command line.  It takes an input of a csv file and processes the entries and puts users into specified portals.  It will clear the roster first if $clear_organization is 1.  You will need to format the csv file correctly and make sure the column numbers are correct for the $line array calls.
     $portal_id = NULL;
     $org_id = NULL;
     $import_id = NULL;
