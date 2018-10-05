@@ -194,6 +194,8 @@ function orgImportController($import, $clear_organization) {
         if (empty($email)) {
             $student = getStudentFromBanner($email, $banner_id);
             $email = $student->emailAddress;
+            $last_name = $student->lastName;
+            $first_name = $student->firstName;
         }
         
         $user_id = getIDFromUsername($email);
