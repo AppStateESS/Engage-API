@@ -230,7 +230,7 @@ function removeGroupAccount($user_ids, $group_id){
  *
  *
  */
-function addAccount($username, $first_name, $last_name, $student_id, $send_welcome=FALSE){
+function addAccount($username, $first_name, $last_name, $student_id=NULL, $send_welcome=FALSE){
     global $key, $base_url;
     
     $json_data = array("username" => $username, "send_welcome" => $send_welcome, "account_attributes" => array("email_address" => $username, "first_name" => $first_name, "last_name" => $last_name),"identification_card_numbers" => array($student_id));
@@ -290,6 +290,40 @@ function getIDFromUsername($username){
         $result = json_decode($result);
         if(!empty($result->id))
             return $result->id;
+    }
+    
+    return false;
+    
+}
+
+function getAccountFromUsername($username){
+    global $key, $base_url;    
+
+    $curl = curl_init();
+    curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $base_url."accounts/username/$username?key=$key"));
+    $result = curl_exec($curl);
+    curl_close($curl);
+  
+    if($result){
+        $result = json_decode($result);
+        return $result;
+    }
+    
+    return false;
+    
+}
+
+function getAccountFromEmail($email){
+    global $key, $base_url;    
+
+    $curl = curl_init();
+    curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $base_url."accounts/email/$email?key=$key"));
+    $result = curl_exec($curl);
+    curl_close($curl);
+  
+    if($result){
+        $result = json_decode($result);
+        return $result;
     }
     
     return false;
@@ -376,7 +410,8 @@ function getAccountByBannerID($banner_id){
   $account_result = curl_exec($curl);
 
   if($account_result)
-    $account_result = json_decode($account_result);
+
+      $account_result = json_decode($account_result);
   else
     $account_result = FALSE;
   curl_close($curl);  
@@ -407,5 +442,101 @@ function getStudentFromBanner($email, $banner_id){
     return $student;
 }
 
+/**
+ * This retrieves all students from banner
+ * @global type $banner_base_url
+ * @return student list
+ */
+function getAllStudentsFromBanner(){
+    global $banner_base_url;
+    $curl = curl_init();
+    curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $banner_base_url."student"));
+    $result = curl_exec($curl);
+    curl_close($curl);
+    $students = json_decode($result);
+    return $students;
+}
+
+function getIDCardByAccountID($account_id){
+  global $key, $base_url;
+  $curl = curl_init();
+  curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $base_url."identification_cards/account_id/$account_id?key=$key"));
+    $card_result = curl_exec($curl);
+    
+  if($card_result)
+    $card_result = json_decode($card_result);
+  else
+    $card_result = FALSE;
+  
+  curl_close($curl);  
+  return $card_result;
+}
+
+function getIDCardByID($id){
+  global $key, $base_url;
+  $curl = curl_init();
+  curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $base_url."identification_cards/$id?key=$key"));
+    $card_result = curl_exec($curl);
+    
+  if($card_result)
+    $card_result = json_decode($card_result);
+  else
+    $card_result = FALSE;
+  
+  curl_close($curl);  
+  return $card_result;
+}
+
+function getIDCardByBannerID($banner_id){
+  global $key, $base_url;
+  $curl = curl_init();
+  curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $base_url."identification_cards/number/$banner_id?key=$key"));
+    $card_result = curl_exec($curl);
+    
+  if($card_result)
+    $card_result = json_decode($card_result);
+  else
+    $card_result = FALSE;
+  
+  curl_close($curl);  
+  return $card_result;
+}
+
+function addIDCard($account_id, $banner_id){
+  global $key, $base_url;
+
+    $json_data = array("account_id" => $account_id, "number" => $banner_id);
+    $json_data = json_encode($json_data);
+    $url = $base_url."/identification_cards?account_id=$account_id&number=$banner_id&key=$key";
+    $curl = curl_init();
+    curl_setopt_array($curl, array(CURLOPT_TIMEOUT => 900, CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $url, CURLOPT_POST => 1, CURLOPT_POSTFIELDS => $json_data));           
+    $card_result = curl_exec($curl);
+    
+  if($card_result)
+    $card_result = json_decode($card_result);
+  else
+    $card_result = FALSE;
+  
+  curl_close($curl);  
+  return $card_result;
+}
+
+function removeIDCard($card_id){
+    global $key, $base_url;
+    
+    $url = $base_url."/identification_cards/$card_id?key=$key";
+    $curl = curl_init();
+    curl_setopt_array($curl, array(CURLOPT_CUSTOMREQUEST => "DELETE", CURLOPT_TIMEOUT => 900, CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $url));           
+    $result = curl_exec($curl); 
+    curl_close($curl);
+    if($result){
+        $result = json_decode($result);
+        if(!property_exists($result, 'message')){
+            return TRUE;
+        }else{
+            return FALSE;
+        }
+    }
+}
 
 ?>

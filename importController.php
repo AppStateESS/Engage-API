@@ -55,12 +55,15 @@ if (isset($argv) && !isset($argv[2])) {
 
 $import = file($argv[1]);
 $clear = $argv[2];  // if you want to remove all members to reset organization roster before import
+// set true if you want group members to be removed from the portal without clearing the entire portal.
+// This will only work if the org import includes groups in the import. 
+$org_import_clear_group = false;
 
 if (isset($argv[3])) {
     $group_id = $argv[3]; //474307(undergrad) 474308(grad) 474310(undergrad and grad) 474309(facutly and staff
     groupImportController($import, $group_id, $clear);
 } else {
-    orgImportController($import, $clear);
+    orgImportController($import, $clear, $org_import_clear_group);
 }
 
 /**
@@ -86,13 +89,20 @@ function groupImportController($import, $group_id, $clear_group) {
         }
         if (!removeGroupAccount($ids, $group_id))
             echo "Group roster reset failed" . "\n";
+        // Clear them from the portal not just the group
+        //if (!removeAccount($ids, 172480))
+        //echo "Group roster reset failed" . "\n";
     }
 
     foreach ($import as $value) {
         $line = explode(',', $value);
         $acct_count++;
         $email = trim($line[2]);
-        $banner_id = trim($line[3]);
+        if(isset($line[3])){
+            $banner_id = trim($line[3]);
+            }else{
+                $banner_id = '';
+            }
         if (empty($email)) {
             $student = getStudentFromBanner($email, $banner_id);
             $email = $student->emailAddress;
@@ -114,7 +124,7 @@ function groupImportController($import, $group_id, $clear_group) {
                 $first_name = $student->firstName;
             }
             $add_result = addAccount($email, $first_name, $last_name, $banner_id);
-            if (!add_result) {
+            if (!$add_result) {
                 echo "Add account failed." . "\n";
                 $failed_accounts[] = "$email,$first_name,$last_name,$banner_id";
             } else {
@@ -161,7 +171,7 @@ function groupImportController($import, $group_id, $clear_group) {
  * 
  */
 
-function orgImportController($import, $clear_organization) {
+function orgImportController($import, $clear_organization, $clear_group = false) {
     $portal_id = NULL;
     $org_id = NULL;
     $import_id = NULL;
@@ -172,7 +182,8 @@ function orgImportController($import, $clear_organization) {
     $acct_count = 0;
     $group_import = FALSE;
     $clear_org = $clear_organization;
-
+    $clear_org_group = $clear_group;
+    
     foreach ($import as $value) {
         $line = explode(',', $value);
         $acct_count++;
@@ -196,7 +207,8 @@ function orgImportController($import, $clear_organization) {
             if (!$import_result)
                 echo "import failed";
             unset($user_ids);
-
+            $clear_org_group = $clear_group;
+            
             if ($org_id != str_replace(PHP_EOL, '', $line[4])) {
                 $clear_org = $clear_organization;
             }
@@ -215,9 +227,15 @@ function orgImportController($import, $clear_organization) {
         $org_id = $line[4]; // column in csv file where org id is
         $import_id = $next_import_id;
 
-        if (!empty($org_id) && $clear_org) {
-            echo "clearing members";
-            $members = getOrgMembers($org_id);
+        if (!empty($org_id) && ($clear_org || $clear_org_group)) {
+            if($clear_org){
+                echo "clearing org members";
+                $members = getOrgMembers($org_id);
+            }elseif($clear_org_group && !empty($import_id)){
+                echo "clearing group members";
+                $members = getGroupMembers($import_id);
+            }
+                
             $ids = array();
             foreach ($members as $value) {
                 $ids[] = $value->id;
@@ -225,6 +243,7 @@ function orgImportController($import, $clear_organization) {
             if (!removeAccount($ids, $org_id))
                 echo "Organization roster reset failed" . "\n";
             $clear_org = 0;
+            $clear_org_group = 0;
         }
 
         if (!$user_id) {

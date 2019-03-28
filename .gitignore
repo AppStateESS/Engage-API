@@ -8,3 +8,4 @@ sdr_sync.conf
 *.gz
 *.log
 /nbproject
+test.php
