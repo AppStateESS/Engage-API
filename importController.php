@@ -28,7 +28,8 @@ $banner_base_url = BANNER_BASE_URL;
 
 /**
  * clear org
-  $org_id = 90180;
+
+  $org_id = 113802;
   $members = getOrgMembers($org_id);
   $ids = array();
   foreach($members as $value){
@@ -37,7 +38,7 @@ $banner_base_url = BANNER_BASE_URL;
   if(!removeAccount($ids, $org_id))
   echo "Organization roster reset failed";
   exit;
- */
+ 
 /*
  * example of deleting account
  */
