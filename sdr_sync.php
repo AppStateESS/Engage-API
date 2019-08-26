@@ -9,8 +9,8 @@
 
 include ("sdr_sync.conf");
 
-$key = ORGSYNC_KEY;
-$base_url = BASE_URL; 
+$key = ENGAGE_API_KEY;
+$base_url = ENGAGE_BASE_URL; 
 $db_user = DB_USER;
 $db_pass = DB_PASS;
 $banner_profile_id = BANNER_ELEMENT_ID; // This is OrgSync's custom profile id for banner id.  Will be used for finding banner id in the user extended profile.  This may be different so check. 
@@ -21,25 +21,26 @@ $current_term = "";
 $organization_cats = array("default"=>106,55007=>102,55031=>10,55016=>'greek',55032=>106,55510=>102,55017=>102,57267=>3,55019=>103,55024=>106,55026=>9,55027=>17,55028=>18,55029=>20,55030=>106,55018=>5,55006=>23,55022=>5);  // associative array to map orgsync categories to sdr org types
 
 // Open logs for writing
-$log_handle = fopen($log_file, 'r+');
-$role_log_handle = fopen($role_log_file, 'r+');
+//$log_handle = fopen($log_file, 'r+');
+//$role_log_handle = fopen($role_log_file, 'r+');
 
 
 $sdr_term = setCurrentTerm();
 // Update the current term in SDR
-if(!$sdr_term)
-  fwrite($log_handle, "Something went wrong setting the current term in mod_settings for sdr. term: $current_term");
+//if(!$sdr_term)
+//  fwrite($log_handle, "Something went wrong setting the current term in mod_settings for sdr. term: $current_term");
 
 // Run main control function
 syncOrganizations();
 
-fclose($log_handle); // close log file
-fclose($role_log_handle);
+//fclose($log_handle); // close log file
+//fclose($role_log_handle);
 
 function syncOrganizations(){
   $dbconn = DBConn("sdr");
   global $exclude_orgs;
   $orgs = getAllOrganizations();
+  var_dump($orgs);exit;
   
   foreach($orgs as $value){
     if($value->umbrella_id == CSIL_ID){
@@ -57,7 +58,7 @@ function syncOrganizations(){
 	  }
 	  if($sdr_org_id){
 	    syncOrgMemberships($org, $sdr_org_id);
-	    updateOrgRoles($org, $sdr_org_id);
+        //	    updateOrgRoles($org, $sdr_org_id);
 	  }
 	}
       }
@@ -679,7 +680,7 @@ function getAllOrganizations(){
   curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
   
   //Request list of all orginizations
-  curl_setopt($curl, CURLOPT_URL, $base_url."orgs?key=$key");
+  curl_setopt($curl, CURLOPT_URL, $base_url."Organizations");
 
   $all_org = curl_exec($curl);
 
@@ -954,6 +955,16 @@ function getOrgsyncNewAccount(){
     
   }
   pg_close($dbconn);
+}
+
+function initCurlGet($endpoint, $query_string) {
+    global $key, $base_url;
+    $curl = curl_init();
+    curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $base_url.$endpoint.$query_string));
+    curl_setopt($curl, CURLOPT_HTTPHEADER, array(
+        'Accept: application/json',
+        'X-Engage-Api-Key: ' . $key));
+    return $curl;
 }
 
 function DBConn($db){
