@@ -7,7 +7,7 @@
    *
    */
 
-include ("sdr_sync.conf");
+include ("/etc/ess/sdr_sync.conf");
 
 $key = ENGAGE_API_KEY;
 $base_url = ENGAGE_BASE_URL; 
@@ -675,23 +675,16 @@ function getAccountVars($account){
 }
 
 function getAllOrganizations(){
-  global $key, $base_url;
-  $curl = curl_init();
-  curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-  
-  //Request list of all orginizations
-  curl_setopt($curl, CURLOPT_URL, $base_url."Organizations");
-
-  $all_org = curl_exec($curl);
-
-  if($all_org){
-    $all_org = json_decode($all_org);
-  }else{
-    $all_org = FALSE;
-  }
-  
-  curl_close($curl);
-  return $all_org;
+    $result = curlGet("Organizations", "pageSize=500");
+    
+    if($result){
+        // need to get all orgs if more then 500. totalPages, pageNumber, totalItems
+        $all_org = $result;
+    }else{
+        $all_org = FALSE;
+    }
+    
+    return $all_org;
 }
 
 function getOrgByID($org_id){
@@ -957,14 +950,19 @@ function getOrgsyncNewAccount(){
   pg_close($dbconn);
 }
 
-function initCurlGet($endpoint, $query_string) {
+function curlGet($endpoint, $query_string="") {
     global $key, $base_url;
+    if(!empty($query_string)){
+        $query_string = "?$query_string";
+    }
     $curl = curl_init();
     curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $base_url.$endpoint.$query_string));
     curl_setopt($curl, CURLOPT_HTTPHEADER, array(
         'Accept: application/json',
         'X-Engage-Api-Key: ' . $key));
-    return $curl;
+    $result = curl_exec($curl);
+    curl_close($curl);
+    return json_decode($result);
 }
 
 function DBConn($db){
