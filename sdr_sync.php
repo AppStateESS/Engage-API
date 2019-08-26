@@ -31,8 +31,9 @@ $sdr_term = setCurrentTerm();
 //  fwrite($log_handle, "Something went wrong setting the current term in mod_settings for sdr. term: $current_term");
 
 // Run main control function
-syncOrganizations();
-
+//syncOrganizations();
+$org = getOrgByID(284356); //test org 284356
+var_dump($org);exit;
 //fclose($log_handle); // close log file
 //fclose($role_log_handle);
 
@@ -40,7 +41,6 @@ function syncOrganizations(){
   $dbconn = DBConn("sdr");
   global $exclude_orgs;
   $orgs = getAllOrganizations();
-  exit;
   
   foreach($orgs as $value){
     if($value->umbrella_id == CSIL_ID){
@@ -693,18 +693,9 @@ function getAllOrganizations(){
 }
 
 function getOrgByID($org_id){
-  global $key, $base_url;
-  $curl = curl_init();
-  //get organization by orgsync id
-  curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $base_url."orgs/$org_id?key=$key"));
-  $org = curl_exec($curl);
-  if($org){
-    $org = json_decode($org);
-  }else{
-    $org = FALSE;
-  }
-  curl_close($curl);
-  return $org;
+    $endpoint = "Organizations/$org_id";
+    //get organization by orgsync id
+    return curlGet($endpoint);
 }
 
 function getOrgMembers($org_id){
