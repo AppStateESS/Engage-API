@@ -40,7 +40,7 @@ function syncOrganizations(){
   $dbconn = DBConn("sdr");
   global $exclude_orgs;
   $orgs = getAllOrganizations();
-  var_dump($orgs);exit;
+  exit;
   
   foreach($orgs as $value){
     if($value->umbrella_id == CSIL_ID){
@@ -675,16 +675,21 @@ function getAccountVars($account){
 }
 
 function getAllOrganizations(){
-    $result = curlGet("Organizations", "pageSize=500");
+    $endpoint = "Organizations";
+    $query_string = "pageSize=30";
+    $result = curlGet($endpoint, $query_string);
+    $all_orgs = FALSE;
     
-    if($result){
-        // need to get all orgs if more then 500. totalPages, pageNumber, totalItems
-        $all_org = $result;
-    }else{
-        $all_org = FALSE;
+    if($result && !empty($result->items)){
+        $total_pages = $result->totalPages;
+        if($total_pages > 1){
+            $all_orgs = combinePages($endpoint, $query_string, $totalPages);
+        } else {
+            $all_orgs = $result->items;
+        }
     }
     
-    return $all_org;
+    return $all_orgs;
 }
 
 function getOrgByID($org_id){
