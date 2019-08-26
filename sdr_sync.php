@@ -683,12 +683,12 @@ function getAllOrganizations(){
     if($result && !empty($result->items)){
         $total_pages = $result->totalPages;
         if($total_pages > 1){
-            $all_orgs = combinePages($endpoint, $query_string, $totalPages);
+            $all_orgs = combinePages($endpoint, $query_string);
         } else {
             $all_orgs = $result->items;
         }
     }
-    
+
     return $all_orgs;
 }
 
@@ -953,6 +953,26 @@ function getOrgsyncNewAccount(){
     
   }
   pg_close($dbconn);
+}
+
+function combinePages($endpoint, $query_string) {
+    $result = curlGet($endpoint, $query_string);
+    $combined = array();
+    if(!empty($query_string)) {
+        $query_string .= "&";
+    }
+
+    if($result) {
+        $totalPages = $result->totalPages;
+        for($i = 1; $i <= $totalPages; $i++) {
+            $page = curlGet($endpoint, $query_string."page=$i");
+            $combined = array_merge($combined, $page->items);
+        }
+    } else {
+        return false;
+    }
+
+    return $combined;
 }
 
 function curlGet($endpoint, $query_string="") {
