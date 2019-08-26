@@ -32,8 +32,8 @@ $sdr_term = setCurrentTerm();
 
 // Run main control function
 //syncOrganizations();
-$org = getOrgByID(284356); //test org 284356
-var_dump($org);exit;
+$result = getOrgMembers(284356); //test org 284356
+var_dump($result);exit;
 //fclose($log_handle); // close log file
 //fclose($role_log_handle);
 
@@ -676,7 +676,7 @@ function getAccountVars($account){
 
 function getAllOrganizations(){
     $endpoint = "Organizations";
-    $query_string = "pageSize=30";
+    $query_string = "pageSize=500";
     $result = curlGet($endpoint, $query_string);
     $all_orgs = FALSE;
     
@@ -699,18 +699,21 @@ function getOrgByID($org_id){
 }
 
 function getOrgMembers($org_id){
-  global $key, $base_url;
-  $curl = curl_init();
-  //get organization members by organization id
-  curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $base_url."orgs/$org_id/accounts?key=$key"));
-  $org_members = curl_exec($curl);
-  if($org_members){
-    $org_members = json_decode($org_members);
-  }else{
+    $endpoint = "Memberships";
+    $query_string = "pageSize=500&organizationId=$org_id";
+    //get organization members by organization id
     $org_members = FALSE;
-  }
-  curl_close($curl);
-  return $org_members;
+    $result = curlGet($endpoint, $query_string);
+    
+    if($result && !empty($result->items)){
+        $total_pages = $result->totalPages;
+        if($total_pages > 1){
+            $org_members = combinePages($endpoint, $query_string);
+        } else {
+            $org_members = $result->items;
+        }
+    }
+    return $org_members;
 }
 
 function getIDFromEmail($email){
