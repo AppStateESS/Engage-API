@@ -92,7 +92,7 @@ function syncOrgMemberships($org, $sdr_org_id){
 	$query = "SELECT * FROM sdr_member WHERE id=$banner_id"; 
 	$result = pg_query($query);
 	if($result && pg_num_rows($result) > 0){
-	  updateAccount($account);
+	  updateUser($account);
 	}else{
 	  createAccount($account);
 	}
@@ -554,35 +554,35 @@ function createAccount($account){
   fwrite($log_handle, $log_str);
 }
 
-function updateAccount($account){
+function updateUser($user){
   global $log_file, $log_handle, $current_term, $organization_cats;
   $log_str = '';
   $success = TRUE;  
 
-  $account_vars = getUserVars($account);
-  $banner_id = $account_vars['banner_id'];
+  $user_vars = getUserVars($user);
+  $banner_id = $user_vars['banner_id'];
 
-  $query = "UPDATE sdr_member SET (username, first_name, last_name) = ('".$account_vars['username']."','".$account_vars['first_name']."','".$account_vars['last_name']."') WHERE id='$banner_id'";
+  $query = "UPDATE sdr_member SET (username, first_name, last_name) = ('".$user_vars['username']."','".$user_vars['first_name']."','".$user_vars['last_name']."') WHERE id='$banner_id'";
   if(!pg_query($query)){
-    $log_str .= "Update Account Error: Unable to update member. query: $query";
+    $log_str .= "Update User Error: Unable to update member. query: $query";
     $success = FALSE;
   }
-  $query = "UPDATE sdr_student SET (gender, ethnicity, citizen, transfer) = ('".$account_vars['gender']."','".$account_vars['ethnicity']."','".$account_vars['citizen']."','".$account_vars['transfer']."') WHERE id='$banner_id'";
+  $query = "UPDATE sdr_student SET (gender, ethnicity, citizen, transfer) = ('".$user_vars['gender']."','".$user_vars['ethnicity']."','".$user_vars['citizen']."','".$user_vars['transfer']."') WHERE id='$banner_id'";
   if(!pg_query($query)){
-    $log_str .= "Update Account Error: Unable to update student. query: $query";
+    $log_str .= "Update User Error: Unable to update student. query: $query";
     $success = FALSE;
   }
   $query = "SELECT * FROM sdr_student_registration WHERE student_id='$banner_id' AND term=$current_term";
   $reg_result = pg_query($query);
   if(pg_num_rows($reg_result) == 0){
-    $query = "INSERT INTO sdr_student_registration (student_id, term, type, level, class, updated) VALUES('".$account_vars['banner_id']."','$current_term','".$account_vars['type']."','".$account_vars['level']."','".$account_vars['class']."','".$account_vars['updated']."')";
+    $query = "INSERT INTO sdr_student_registration (student_id, term, type, level, class, updated) VALUES('".$user_vars['banner_id']."','$current_term','".$user_vars['type']."','".$user_vars['level']."','".$user_vars['class']."','".$user_vars['updated']."')";
     if(!pg_query($query)){
-      $log_str .= "Update Account Error: Unable to update student registration. query: $query";
+      $log_str .= "Update User Error: Unable to update student registration. query: $query";
       $success = FALSE;
     }
   }
   if($success)
-    $log_str .= "Successfully updated account. Banner id: ".$account_vars['banner_id'].", orgsync id: $account->id";
+    $log_str .= "Successfully updated user. Banner id: ".$user_vars['banner_id'].", orgsync id: $user->id";
 
   fwrite($log_handle, $log_str);
 }
