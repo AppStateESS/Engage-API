@@ -32,8 +32,9 @@ $sdr_term = setCurrentTerm();
 
 // Run main control function
 //syncOrganizations();
-$result = getOrgMembers(284356); //test org 284356
-var_dump($result);exit;
+//$result = getOrgMembers(284356); //test org 284356
+getIDFromEmail("eberhardtm@appstate.edu");
+//var_dump($result);exit;
 //fclose($log_handle); // close log file
 //fclose($role_log_handle);
 
@@ -717,20 +718,18 @@ function getOrgMembers($org_id){
 }
 
 function getIDFromEmail($email){
-    global $key, $base_url;    
-
-    $curl = curl_init();
-    curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $base_url."accounts/email/$email?key=$key"));
-    $result = curl_exec($curl);
-    curl_close($curl);
-
-    if($result){
-        $result = json_decode($result);
-        if(!empty($result->id))
-            return $result->id;
-    }
+    $endpoint = "Users/";
+    $query_string = "username=".urlencode($email);
+    $id = FALSE;
     
-    return false;
+    $result = curlGet($endpoint, $query_string);
+
+    if(!empty($result->items)) {
+        $user = $result->items;
+        $id = $user[0]->userId;
+    }
+
+    return $id;
 }
 
 function getAllAccounts(){
