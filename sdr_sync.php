@@ -74,7 +74,7 @@ function syncOrgMemberships($org, $sdr_org_id){
   $members = $org->account_ids;
 
   foreach($members as $id){
-    $account = getAccountByID($id);
+    $account = getUserByID($id);
     $username = $account->username;
     $first_name = $account->first_name;
     $last_name = $account->first_name;
@@ -796,29 +796,19 @@ function getGreekType($org_id){
     $org_type = '';
 
     foreach($members as $member){
-        $member_id = $member->id;
-      $account = getAccountByID($member_id);
-      if($account->profile_responses[3]->element->name != 'Gender'){
-	foreach($account->profile_responses as $value){
-	  if($value->element->name == 'Gender')
-	    $gender = $value->data->name;
-	}
-      }else{
-	if(is_object($account->profile_responses[3]->data))
-	  $gender = $account->profile_responses[3]->data->name;
-	else
-	  $gender = '';
-      }
-
-      if($gender == 'Female')
-	$female++;
-      elseif($gender == 'Male')
-	$male++;
+        $member_id = $member->userId;
+        $user = getUserByID($member_id);
+        $gender = $user->sex->value;
+        
+        if($gender == 'Female')
+            $female++;
+        elseif($gender == 'Male')
+            $male++;
     }
     if($male > $female)
-      $org_type = FRATERNITY;
+        $org_type = FRATERNITY;
     else
-      $org_type = SORORITY;
+        $org_type = SORORITY;
     
     return $org_type;
 }
