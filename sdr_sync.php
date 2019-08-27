@@ -224,13 +224,13 @@ function updateOrgRoles($org, $sdr_org_id){
   foreach($groups as $group){
     if($group->name == ORGSYNC_NEW_MEMBER_GROUP && count($group->account_ids) > 0){
       foreach($group->account_ids as $account_id){
-	$account_vars = getAccountVars(getAccountByID($account_id));
+	$account_vars = getUserVars(getAccountByID($account_id));
 	$officers_ids[$account_vars['banner_id']] = 'new_member';
       }
     }
     if($group->name == ORGSYNC_OFFICER_GROUP && count($group->account_ids) > 0){
       foreach($group->account_ids as $account_id){
-	$account_vars = getAccountVars(getAccountByID($account_id));
+	$account_vars = getUserVars(getAccountByID($account_id));
 	$officers_ids[$account_vars['banner_id']] = 'officer';
       }
     }
@@ -531,7 +531,7 @@ function createAccount($account){
   $log_str = '';
   $success = TRUE;  
 
-  $account_vars = getAccountVars($account);
+  $account_vars = getUserVars($account);
   $banner_id = $account_vars['banner_id'];
     $query = "INSERT INTO sdr_member (id, username, first_name, last_name) VALUES('".$account_vars['banner_id']."','".$account_vars['username']."','".$account_vars['first_name']."','".$account_vars['last_name']."')";
   if(!pg_query($query)){
@@ -559,7 +559,7 @@ function updateAccount($account){
   $log_str = '';
   $success = TRUE;  
 
-  $account_vars = getAccountVars($account);
+  $account_vars = getUserVars($account);
   $banner_id = $account_vars['banner_id'];
 
   $query = "UPDATE sdr_member SET (username, first_name, last_name) = ('".$account_vars['username']."','".$account_vars['first_name']."','".$account_vars['last_name']."') WHERE id='$banner_id'";
@@ -587,93 +587,55 @@ function updateAccount($account){
   fwrite($log_handle, $log_str);
 }
 
-function getAccountVars($account){
-  $account_vars = array();
+function getUserVars($user){
+  $user_vars = array();
   $gender = $ethnicity = $banner_id = $citizen = $transfer = $class = $type = $level = NULL;
-  $parts = explode("@", $account->username);
-  $account_vars['username'] = $parts[0];
-  $account_vars['first_name'] = pg_escape_string($account->first_name);
-  $account_vars['last_name'] = pg_escape_string($account->last_name);
-  $account_vars['updated'] = time();
-  $profile_responses = $account->profile_responses;
-
-  foreach($profile_responses as $value){
-    switch ($value->element->id) 
-      {
-      case GENDER_ELEMENT_ID:
-	if(is_object($value->data)){
-	  $gender = $value->data->name;
-	  if($gender == "Male")
-	    $gender = "M";
-	  elseif($gender == "Female")
-	    $gender = "F";
-	  else
-	    $gender = NULL;
-	}else{
-	  $gender = NULL;
-	}
-	$account_vars['gender'] = $gender;
-	break;
-      case ETHNICITY_ELEMENT_ID:
-	$account_vars['ethnicity'] = '';
-	if(is_object($value->data))
-	  $account_vars['ethnicity'] = translateEthnicity($value->data->name);
-	break;
-      case BANNER_ELEMENT_ID:
-	$account_vars['banner_id'] = $value->data;
-	break;
-      case INTERNATIONAL_STUDENT_ELEMENT_ID:
-	$citizen = NULL;
-	if(is_object($value->data)){
-	  if($value->data->name == "Yes")
-	    $citizen = "N";
-	  else
-	    $citizen = "Y";
-	}
-	$account_vars['citizen'] = $citizen;
-	break;
-      case TRANSFER_STUDENT_ELEMENT_ID:
-	$transfer = 0;
-	if(is_object($value->data)){
-	  $transfer = $value->data->name;
-	  if($transfer == "Yes"){
-	    $transfer = 1;
-	    $type = "T";
-	  }else{
-	    $transfer = 0;
-	  }
-	}
-	$account_vars['transfer'] = $transfer;
-	break;
-      case CLASSIFICATION_ELEMENT_ID:
-	$class = "";
-	$type = "";
-	$level = "G";
-	if(is_object($value->data)){
-	  if($value->data->name == "Freshmen"){
-	    $class = "FR";
-	    $type = "F";
-	  }elseif($value->data->name == "Sophmore"){
-	    $class = "SO";
-	  }elseif($value->data->name == "Junior"){
-	    $class = "JR";
-	  }elseif($value->data->name == "Senior"){
-	    $class = "SR";
-	  }
-	}
-	  if(!empty($class))
-	    $level = "U";
-	  else
-	    $level = "G";
-	$account_vars['class'] = $class;
-	$account_vars['type'] = $type;
-	$account_vars['level'] = $level;
-	break;
-      default:
-	break;
-    }
+  $parts = explode("@", $user->username);
+  $user_vars['username'] = $parts[0];
+  $user_vars['first_name'] = pg_escape_string($user->firstName);
+  $user_vars['last_name'] = pg_escape_string($user->lastName);
+  $user_vars['updated'] = time();
+  $profile_responses = $user->profile_responses;
+  $gender = $user->sex->value;
+  if($gender == "Male")
+      $gender = "M";
+  elseif($gender == "Female")
+      $gender = "F";
+  else
+      $gender = NULL;
+  $user_vars['ethnicity'] = translateEthnicity($user->ethnicity->value);  
+  $user_vars['banner_id'] = $user->cardId;
+  $user_vars['citizen'] = "Y";
+  if($user->international->value == "True")
+      $user_vars['citizen'] = "N";
+  $user_vars['transfer'] = FALSE;
+  if($user->transfer->value == "True")
+      $user_vars['transfer'] = TRUE;
+  $class = "";
+  $type = "";
+  $level = "G";
+  $class_standing = $user->classStanding->value;
+  
+  if($class_standing == "Freshmen"){
+      $class = "FR";
+      $type = "F";
+  }elseif($class_standing == "Sophmore"){
+      $class = "SO";
+  }elseif($class_standing == "Junior"){
+      $class = "JR";
+  }elseif($class_standing == "Senior"){
+      $class = "SR";
   }
-  return $account_vars;
+  
+  if(!empty($class))
+      $level = "U";
+  else
+      $level = "G";
+  $user_vars['class'] = $class;
+  $user_vars['type'] = $type;
+  $user_vars['level'] = $level;
+
+  return $user_vars;
 }
 
 function getAllOrganizations(){
