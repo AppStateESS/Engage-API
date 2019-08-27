@@ -34,8 +34,8 @@ $sdr_term = setCurrentTerm();
 //syncOrganizations();
 $testorg = 284356; //test org 284356
 //$result = getOrgMembers($testorg);
-$result = 
-//var_dump($result);exit;
+$result = getUserByBannerID(900200632);
+var_dump($result);exit;
 //fclose($log_handle); // close log file
 //fclose($role_log_handle);
 
@@ -753,20 +753,18 @@ function getAllUsers(){
 }
 
 
-function getAccountByBannerID($banner_id){
-  global $key, $base_url,$banner_profile_id;
-  $curl = curl_init();
+function getUserByBannerID($banner_id){
+    $endpoint = "Users/";
+    $query_string = "cardId=$banner_id";
+    $user = FALSE;
+    
+    $result = curlGet($endpoint, $query_string);
 
-  curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $base_url."accounts/custom_profile/$banner_profile_id/$banner_id?key=$key"));
-  $account_result = curl_exec($curl);
+    if(!empty($result->items)) {
+        $user = $result->items;
+    }
 
-  if($account_result)
-    $account_result = json_decode($account_result);
-  else
-    $account_result = FALSE;
-  curl_close($curl);  
-  return $account_result;
-
+    return $user;    
 }
 
 function getAccountByID($id){
