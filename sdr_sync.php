@@ -33,8 +33,8 @@ $sdr_term = setCurrentTerm();
 // Run main control function
 //syncOrganizations();
 $testorg = 284356; //test org 284356
-//$result = getOrgMembers($testorg);
-$result = getUserByID(17973784);
+$result = getOrgByID($testorg);
+//$result = getUserByID(17973784);
 var_dump($result);exit;
 //fclose($log_handle); // close log file
 //fclose($role_log_handle);
@@ -343,13 +343,13 @@ function createOrganization($org){
   $success = TRUE;
   
   // organization instance parameters
-  $long_name = pg_escape_string($org->long_name);
-  $short_name = pg_escape_string($org->short_name);
-  $org_id = $org->id;
+  $long_name = pg_escape_string($org->name);
+  $short_name = pg_escape_string($org->shortName);
+  $org_id = $org->organizationId;
   $sdr_org_id = 0;
 
-  if(!empty($organization_cats[$org->category->id]))
-    $org_type = $organization_cats[$org->category->id];
+  if(!empty($organization_cats[$org->typeId]))
+    $org_type = $organization_cats[$org->typeId];
   else
     $org_type = $organization_cats['default'];
 
@@ -357,17 +357,18 @@ function createOrganization($org){
   $bank = "";
   $ein = "";
   //organization profile parameters. Probably don't need any of this but can add it in if needed.
-  $profile_responses = $org->profile_responses;
+  $custom_fields = $org->customFields;
   $purpose = "";
   $club_logo = NULL;  // not setting this
   $meeting_location = NULL; //not setting this
   $meeting_date = ""; 
   $description = pg_escape_string($org->description);
   $description = "<p>".$description."</p>";
-  $site_url = $org->website_url;
+  $site_url = $org->externalWebsite;
   $contact_info = NULL; // not setting this
 
-  foreach($profile_responses as $value){
+  /**
+  foreach($custom_fields as $value){
     if($value->element->type == "Meeting Location")
       $meeting_location = pg_escape_string($value->data);
     if($value->element->type == "Name of Bank")
@@ -376,11 +377,11 @@ function createOrganization($org){
       $ein = pg_escape_string($value->data);
     if($value->element->type == "Organization Goals")
       $purpose = pg_escape_string($value->data);
-
   }
+  */
 
   if($org_type == 'greek'){ 
-    $org_type = getGreekType($org->id);
+    $org_type = getGreekType($org->organizationId);
   }
 
   $query = "SELECT NEXTVAL('sdr_organization_seq')";
