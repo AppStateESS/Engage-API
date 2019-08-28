@@ -94,7 +94,7 @@ function syncOrgMemberships($org, $sdr_org_id){
 	if($result && pg_num_rows($result) > 0){
 	  updateUser($account);
 	}else{
-        createAccount($account);
+        createUser($account);
 	}
 	updateMembership($banner_id, $sdr_org_id);
       }else{
@@ -526,7 +526,7 @@ function updateOrganization($org, $sdr_id){
   fwrite($log_handle, $log_str);
 }
 
-function createMember($user){
+function createUser($user){
   global $log_file, $log_handle, $current_term, $organization_cats;
   $log_str = '';
   $success = TRUE;  
