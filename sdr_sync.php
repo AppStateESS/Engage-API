@@ -94,7 +94,7 @@ function syncOrgMemberships($org, $sdr_org_id){
 	if($result && pg_num_rows($result) > 0){
 	  updateUser($account);
 	}else{
-	  createAccount($account);
+        createAccount($account);
 	}
 	updateMembership($banner_id, $sdr_org_id);
       }else{
@@ -526,30 +526,30 @@ function updateOrganization($org, $sdr_id){
   fwrite($log_handle, $log_str);
 }
 
-function createAccount($account){
+function createMember($user){
   global $log_file, $log_handle, $current_term, $organization_cats;
   $log_str = '';
   $success = TRUE;  
 
-  $account_vars = getUserVars($account);
-  $banner_id = $account_vars['banner_id'];
-    $query = "INSERT INTO sdr_member (id, username, first_name, last_name) VALUES('".$account_vars['banner_id']."','".$account_vars['username']."','".$account_vars['first_name']."','".$account_vars['last_name']."')";
+  $user_vars = getUserVars($user);
+  $banner_id = $user_vars['banner_id'];
+    $query = "INSERT INTO sdr_member (id, username, first_name, last_name) VALUES('".$user_vars['banner_id']."','".$user_vars['username']."','".$user_vars['first_name']."','".$user_vars['last_name']."')";
   if(!pg_query($query)){
-    $log_str .= "Create Account Error: Unable to create member. query: $query";
+    $log_str .= "Create member Error: Unable to create member. query: $query";
     $success = FALSE;
   }
-  $query = "INSERT INTO sdr_student (id, gender, ethnicity, citizen, transfer) VALUES('".$account_vars['banner_id']."','".$account_vars['gender']."','".$account_vars['ethnicity']."','".$account_vars['citizen']."','".$account_vars['transfer']."')";
+  $query = "INSERT INTO sdr_student (id, gender, ethnicity, citizen, transfer) VALUES('".$user_vars['banner_id']."','".$user_vars['gender']."','".$user_vars['ethnicity']."','".$user_vars['citizen']."','".$user_vars['transfer']."')";
   if(!pg_query($query)){
-    $log_str .= "Create Account Error: Unable to create student. query: $query";
+    $log_str .= "Create Student Error: Unable to create student. query: $query";
     $success = FALSE;
   }
-  $query = "INSERT INTO sdr_student_registration (student_id, term, type, level, class, updated) VALUES('".$account_vars['banner_id']."','$current_term','".$account_vars['type']."','".$account_vars['level']."','".$account_vars['class']."','".$account_vars['updated']."')";
+  $query = "INSERT INTO sdr_student_registration (student_id, term, type, level, class, updated) VALUES('".$user_vars['banner_id']."','$current_term','".$user_vars['type']."','".$user_vars['level']."','".$user_vars['class']."','".$user_vars['updated']."')";
   if(!pg_query($query)){
-    $log_str .= "Create Account Error: Unable to create student registrationi. query: $query";
+    $log_str .= "Create Student registration Error: Unable to create student registration. query: $query";
     $success = FALSE;
   }
   if($success)
-    $log_str .= "Successfully created account. Banner id: ".$account_vars['banner_id'].", orgsync id: $account->id";
+    $log_str .= "Successfully created member. Banner id: ".$user_vars['banner_id'].", orgsync id: $user->id";
 
   fwrite($log_handle, $log_str);
 }
