@@ -32,10 +32,13 @@ $sdr_term = setCurrentTerm();
 
 // Run main control function
 //syncOrganizations();
+
+// For testing purposes
 $testorg = 284356; //test org 284356
-$result = getOrgByID($testorg);
-//$result = getUserByID(17973784);
+//$result = getOrgMembers($testorg);
+$result = getUserByID(18269417);
 var_dump($result);exit;
+
 //fclose($log_handle); // close log file
 //fclose($role_log_handle);
 
@@ -71,37 +74,26 @@ pg_close($dbconn);
 
 function syncOrgMemberships($org, $sdr_org_id){
   global $log_handle;
-  $members = $org->account_ids;
+  $members = getOrgMembers($org->organizationId);
 
-  foreach($members as $id){
-    $account = getUserByID($id);
-    $username = $account->username;
-    $first_name = $account->first_name;
-    $last_name = $account->first_name;
-    $profile_responses = $account->profile_responses;
-    if(!empty($profile_responses)){
-      if($profile_responses[6]->element->id != BANNER_ELEMENT_ID){
-	foreach($profile_responses as $value){
-	  if($value->element->id == BANNER_ELEMENT_ID)
-	    $banner_id = $value->data;
-	}
-      }else{
-	$banner_id = $profile_responses[6]->data;
-      }
-      if(!empty($banner_id)){
-	$query = "SELECT * FROM sdr_member WHERE id=$banner_id"; 
-	$result = pg_query($query);
-	if($result && pg_num_rows($result) > 0){
-	  updateUser($account);
-	}else{
-        createUser($account);
-	}
-	updateMembership($banner_id, $sdr_org_id);
-      }else{
-	fwrite($log_handle, "Sync Org Memberships Error: Account has no banner id. account id: $id, username: $username, first name: $first_name, last name: $last_name"."\r\n");
-      }
-    }else{
-      fwrite($log_handle, "Sync Org Memberships Error: Account has no extended profile. account id: $id, username: $username, first name: $first_name, last name: $last_name"."\r\n");
+  foreach($members as $member){
+    $user = getUserByID($member->userId);
+    $username = $user->username;
+    $first_name = $user->firstName;
+    $last_name = $user->lastName;
+    $banner_id = $user->cardId;
+
+    if(!empty($banner_id)){
+        $query = "SELECT * FROM sdr_member WHERE id=$banner_id"; 
+        $result = pg_query($query);
+        if($result && pg_num_rows($result) > 0){
+            updateUser($user);
+        } else {
+            createUser($user);
+        }
+        updateMembership($banner_id, $sdr_org_id);
+    } else {
+        fwrite($log_handle, "Sync Org Memberships Error: Account has no card id. user id: ".$member->userId.", username: $username, first name: $first_name, last name: $last_name"."\r\n");
     }
   }
 }
@@ -877,6 +869,7 @@ function initIDMap(){
   pg_close($dbconn);
 }
 
+// Not being used
 function getOrgsyncNewAccount(){
   $dbconn = DBConn("sdr");
   $all_accounts = getAllAccounts();
