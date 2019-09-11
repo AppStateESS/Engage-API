@@ -37,9 +37,9 @@ $sdr_term = setCurrentTerm();
 $testorg = 284356; //test org 284356
 //$result = getOrgMembers($testorg);
 //$result = getUserByID(18269417);
-$result = getOrgByID(258956);
-var_dump($result);exit;
-//initIDMap();
+//$result = getOrgByID(258956);
+//var_dump($result);exit;
+initIDMap();
 
 //fclose($log_handle); // close log file
 //fclose($role_log_handle);
@@ -825,6 +825,9 @@ function initIDMap(){
   $count = 0;
   $dup_count = 0;
   foreach($orgs as $org){
+      if($org->parentId != CSIL_ID){
+          continue;
+      }
     $short_name = pg_escape_string(strtolower($org->shortName));
     $long_name = pg_escape_string(strtolower($org->name));
     $org_id = $org->organizationId;
