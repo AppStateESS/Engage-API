@@ -36,8 +36,9 @@ $sdr_term = setCurrentTerm();
 // For testing purposes
 $testorg = 284356; //test org 284356
 //$result = getOrgMembers($testorg);
-$result = getUserByID(18269417);
-var_dump($result);exit;
+//$result = getUserByID(18269417);
+//$result = getOrgByID($testorg);
+//var_dump($result);exit;
 
 //fclose($log_handle); // close log file
 //fclose($role_log_handle);
@@ -817,8 +818,6 @@ function setCurrentTerm(){
 }
 
 function initIDMap(){
-  $log_file = 'initidmap.log';
-  $log_handle = fopen($log_file, 'r+');
   $dbconn = DBConn("sdr");
   $orgs = getAllOrganizations();
   $total_orgs = count($orgs);
@@ -826,9 +825,9 @@ function initIDMap(){
   $count = 0;
   $dup_count = 0;
   foreach($orgs as $org){
-    $short_name = pg_escape_string(strtolower($org->short_name));
-    $long_name = pg_escape_string(strtolower($org->long_name));
-    $org_id = $org->id;
+    $short_name = pg_escape_string(strtolower($org->shortName));
+    $long_name = pg_escape_string(strtolower($org->name));
+    $org_id = $org->organizationId;
     $query = "select * from sdr_organization_instance where LOWER(name)='$short_name' or LOWER(name) like '%$long_name%' order by organization_id asc";
     $result = pg_query($dbconn, $query);
     $result_count = 0;
@@ -863,9 +862,8 @@ function initIDMap(){
   }
   $log_str .= "Total number of organizations from Orgsync: $total_orgs"."\r\n";
   $log_str .= "Total number of organizations with successful matches: $count of which $dup_count had duplicate results."; 
-  
-  fwrite($log_handle, $log_str);
-  fclose($log_handle);
+
+  echo $log_str;
   pg_close($dbconn);
 }
 
