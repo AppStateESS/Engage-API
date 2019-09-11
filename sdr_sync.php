@@ -37,9 +37,9 @@ $sdr_term = setCurrentTerm();
 $testorg = 284356; //test org 284356
 //$result = getOrgMembers($testorg);
 //$result = getUserByID(18269417);
-//$result = getOrgByID($testorg);
-//var_dump($result);exit;
-initIDMap();
+$result = getOrgByID(258956);
+var_dump($result);exit;
+//initIDMap();
 
 //fclose($log_handle); // close log file
 //fclose($role_log_handle);
@@ -50,28 +50,27 @@ function syncOrganizations(){
   $orgs = getAllOrganizations();
   
   foreach($orgs as $value){
-    if($value->umbrella_id == CSIL_ID){
-      if(!in_array($value->id, $exclude_orgs)){
-	$org = getOrgByID($value->id);
-	if(!$org->is_disabled){
-	  $query = "SELECT * FROM sdr_appsync_id_map WHERE appsync_id=$org->id";
-	  $result = pg_query($query);
-	  if(pg_num_rows($result) > 0){ // The organization exists in club connect so update it
-	    $row = pg_fetch_assoc($result);
-	    $sdr_org_id = $row['sdr_id'];
-	    updateOrganization($org, $sdr_org_id);
-	  }else{ // the organization does not exist in club connect so create it.
-	    $sdr_org_id = createOrganization($org);
-	  }
-	  if($sdr_org_id){
-	    syncOrgMemberships($org, $sdr_org_id);
-        //	    updateOrgRoles($org, $sdr_org_id);
-	  }
-	}
+      if($value->parentId == CSIL_ID){
+          if(!in_array($value->organizationId, $exclude_orgs)){
+              if($org->status == "Active"){
+                  $query = "SELECT * FROM sdr_appsync_id_map WHERE appsync_id=$org->organizationId";
+                  $result = pg_query($query);
+                  if(pg_num_rows($result) > 0){ // The organization exists in club connect so update it
+                      $row = pg_fetch_assoc($result);
+                      $sdr_org_id = $row['sdr_id'];
+                      updateOrganization($org, $sdr_org_id);
+                  }else{ // the organization does not exist in club connect so create it.
+                      $sdr_org_id = createOrganization($org);
+                  }
+                  if($sdr_org_id){
+                      syncOrgMemberships($org, $sdr_org_id);
+                      //	    updateOrgRoles($org, $sdr_org_id);
+                  }
+              }
+          }
       }
-    }
   }
-pg_close($dbconn);
+  pg_close($dbconn);
 }
 
 function syncOrgMemberships($org, $sdr_org_id){
@@ -834,28 +833,28 @@ function initIDMap(){
     $result_count = 0;
     $row = pg_fetch_assoc($result);
     if($row){
-      $count++;
-    // check to see if we have more then one organization returned in the result set.  If so log it and do not put it in the map table.
-      $prev_sdr_id = $row['organization_id'];
-      while($row = pg_fetch_assoc($result)){
-	$next_sdr_id = $row['organization_id'];
-	if($prev_sdr_id != $next_sdr_id){
-	  $result_count++;
-	  $prev_sdr_id = $next_sdr_id;
-	}
-      }
-      if($result_count > 0){
-	$log_str .= "Duplicate results found for $long_name. Appsync id = $org_id"."\r\n";
-	$dup_count++;
-      }else{
-	// Add it to the ID map table
-          $query = "INSERT INTO sdr_appsync_id_map (appsync_id, sdr_id) VALUES($org_id, $prev_sdr_id)";
-	
-          if(!pg_query($dbconn, $query))
-              $log_str .= "Insert failed for $long_name. query: $query"."\r\n";
-      }
+        $count++;
+        // check to see if we have more then one organization returned in the result set.  If so log it and do not put it in the map table.
+        $prev_sdr_id = $row['organization_id'];
+        while($row = pg_fetch_assoc($result)){
+            $next_sdr_id = $row['organization_id'];
+            if($prev_sdr_id != $next_sdr_id){
+                $result_count++;
+                $prev_sdr_id = $next_sdr_id;
+            }
+        }
+        if($result_count > 0){
+            $log_str .= "Duplicate results found for $long_name. Appsync id = $org_id"."\r\n";
+            $dup_count++;
+        }else{
+            // Add it to the ID map table
+            $query = "INSERT INTO sdr_appsync_id_map (appsync_id, sdr_id) VALUES($org_id, $prev_sdr_id)";
+            
+            if(!pg_query($dbconn, $query))
+                $log_str .= "Insert failed for $long_name. query: $query"."\r\n";
+        }
     }else{
-      $log_str .= "No match for $long_name. Appsync id = $org_id"."\r\n";
+        $log_str .= "No match for $long_name. Appsync id = $org_id"."\r\n";
     }
   }
   $log_str .= "Total number of organizations from Appsync: $total_orgs"."\r\n";
