@@ -39,6 +39,7 @@ $testorg = 284356; //test org 284356
 //$result = getUserByID(18269417);
 //$result = getOrgByID($testorg);
 //var_dump($result);exit;
+initIDMap();
 
 //fclose($log_handle); // close log file
 //fclose($role_log_handle);
@@ -53,7 +54,7 @@ function syncOrganizations(){
       if(!in_array($value->id, $exclude_orgs)){
 	$org = getOrgByID($value->id);
 	if(!$org->is_disabled){
-	  $query = "SELECT * FROM sdr_orgsync_id_map WHERE orgsync_id=$org->id";
+	  $query = "SELECT * FROM sdr_appsync_id_map WHERE appsync_id=$org->id";
 	  $result = pg_query($query);
 	  if(pg_num_rows($result) > 0){ // The organization exists in club connect so update it
 	    $row = pg_fetch_assoc($result);
@@ -417,7 +418,7 @@ function createOrganization($org){
 	  }
 	}
 	// Insert into mapping table
-	$query = "INSERT INTO sdr_orgsync_id_map (orgsync_id, sdr_id) values($org_id, $sdr_org_id)";
+	$query = "INSERT INTO sdr_appsync_id_map (appsync_id, sdr_id) values($org_id, $sdr_org_id)";
 	if(!pg_query($query)){
 	  $log_str .= "Create Organization Error: Insert into mapping table failed. query: $query"."\r\n";
 	  $success = FALSE;
@@ -844,23 +845,20 @@ function initIDMap(){
 	}
       }
       if($result_count > 0){
-	$log_str .= "Duplicate results found for $long_name. Orgsync id = $org_id"."\r\n";
+	$log_str .= "Duplicate results found for $long_name. Appsync id = $org_id"."\r\n";
 	$dup_count++;
       }else{
 	// Add it to the ID map table
-	$query = "INSERT INTO sdr_orgsync_id_map (orgsync_id, sdr_id) VALUES($org_id, $prev_sdr_id)";
+          $query = "INSERT INTO sdr_appsync_id_map (appsync_id, sdr_id) VALUES($org_id, $prev_sdr_id)";
 	
-	if(pg_query($dbconn, $query))
-	  $log_str .= "Successfully mapped $long_name. Orgsync id => SDR id: $org_id => $prev_sdr_id"."\r\n";
-	else
-	  $log_str .= "Insert failed for $long_name. query: $query"."\r\n";
-	
+          if(!pg_query($dbconn, $query))
+              $log_str .= "Insert failed for $long_name. query: $query"."\r\n";
       }
     }else{
-      $log_str .= "No match for $long_name. Orgsync id = $org_id"."\r\n";
+      $log_str .= "No match for $long_name. Appsync id = $org_id"."\r\n";
     }
   }
-  $log_str .= "Total number of organizations from Orgsync: $total_orgs"."\r\n";
+  $log_str .= "Total number of organizations from Appsync: $total_orgs"."\r\n";
   $log_str .= "Total number of organizations with successful matches: $count of which $dup_count had duplicate results."; 
 
   echo $log_str;
