@@ -13,7 +13,6 @@ $key = ENGAGE_API_KEY;
 $base_url = ENGAGE_BASE_URL; 
 $db_user = DB_USER;
 $db_pass = DB_PASS;
-$banner_profile_id = BANNER_ELEMENT_ID; // This is OrgSync's custom profile id for banner id.  Will be used for finding banner id in the user extended profile.  This may be different so check. 
 $exclude_orgs = array(95550,878950);  // These are some organizations in OrgSync that really didn't belong as a club or greek organization.  You may not need this 
 $log_file = 'sdr_sync_error.log';
 $role_log_file = 'org_roles_error.log';
@@ -31,15 +30,18 @@ $sdr_term = setCurrentTerm();
 //  fwrite($log_handle, "Something went wrong setting the current term in mod_settings for sdr. term: $current_term");
 
 // Run main control function
-//syncOrganizations();
+syncOrganizations();
 
 // For testing purposes
 $testorg = 284356; //test org 284356
 //$result = getOrgMembers($testorg);
-//$result = getUserByID(18269417);
-//$result = getOrgByID(258956);
+//$result = getUserByBannerID(900799123);
+//$result = getOrgByID($testorg);
+//$id = getIDFromEmail('morrisonta@appstate.edu');
+//$result = getUserByID($id);
 //var_dump($result);exit;
-initIDMap();
+
+//initIDMap();
 
 //fclose($log_handle); // close log file
 //fclose($role_log_handle);
@@ -49,9 +51,9 @@ function syncOrganizations(){
   global $exclude_orgs;
   $orgs = getAllOrganizations();
   
-  foreach($orgs as $value){
-      if($value->parentId == CSIL_ID){
-          if(!in_array($value->organizationId, $exclude_orgs)){
+  foreach($orgs as $org){
+      if($org->parentId == CSIL_ID){
+          if(!in_array($org->organizationId, $exclude_orgs)){
               if($org->status == "Active"){
                   $query = "SELECT * FROM sdr_appsync_id_map WHERE appsync_id=$org->organizationId";
                   $result = pg_query($query);
@@ -327,7 +329,8 @@ function updateMembership($member_id, $sdr_org_id){
   }
   if($success)
     $log_str .= "Successfully updated membership. member id = $member_id, sdr org id: $sdr_org_id"."\r\n";
-  fwrite($log_handle, $log_str);
+  //fwrite($log_handle, $log_str);
+  echo $log_str;
 }
 
 function createOrganization($org){
@@ -438,7 +441,8 @@ function createOrganization($org){
   }
   if($success)
     $log_str .= "Successfully created $long_name.  ID = $org_id"."\r\n";
-  fwrite($log_handle, $log_str);
+  //fwrite($log_handle, $log_str);
+  echo $log_str;
 
   return $sdr_org_id;
 }
@@ -518,7 +522,8 @@ function updateOrganization($org, $sdr_id){
   
   if($success)
     $log_str .= "Successfully updated $long_name.  ID = $org_id"."\r\n";
-  fwrite($log_handle, $log_str);
+  //fwrite($log_handle, $log_str);
+  echo $log_str;
 }
 
 function createUser($user){
@@ -546,7 +551,8 @@ function createUser($user){
   if($success)
     $log_str .= "Successfully created member. Banner id: ".$user_vars['banner_id'].", orgsync id: $user->id";
 
-  fwrite($log_handle, $log_str);
+  //fwrite($log_handle, $log_str);
+  echo $log_str;
 }
 
 function updateUser($user){
@@ -579,7 +585,8 @@ function updateUser($user){
   if($success)
     $log_str .= "Successfully updated user. Banner id: ".$user_vars['banner_id'].", orgsync id: $user->id";
 
-  fwrite($log_handle, $log_str);
+  //fwrite($log_handle, $log_str);
+  echo $log_str;
 }
 
 function getUserVars($user){
@@ -825,7 +832,7 @@ function initIDMap(){
   $count = 0;
   $dup_count = 0;
   foreach($orgs as $org){
-      if($org->parentId != CSIL_ID){
+      if($org->parentId != CSIL_ID || $org->status =="Inactive"){
           continue;
       }
     $short_name = pg_escape_string(strtolower($org->shortName));
