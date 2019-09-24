@@ -327,8 +327,8 @@ function updateMembership($member_id, $sdr_org_id){
       $log_str .= "Update Membership Error: could not get next sequence when adding member id: $member_id to sdr org id: $sdr_org_id"."\r\n";
     }
   }
-  if($success)
-    $log_str .= "Successfully updated membership. member id = $member_id, sdr org id: $sdr_org_id"."\r\n";
+  //if($success)
+  //$log_str .= "Successfully updated membership. member id = $member_id, sdr org id: $sdr_org_id"."\r\n";
   //fwrite($log_handle, $log_str);
   echo $log_str;
 }
@@ -548,8 +548,8 @@ function createUser($user){
     $log_str .= "Create Student registration Error: Unable to create student registration. query: $query";
     $success = FALSE;
   }
-  if($success)
-    $log_str .= "Successfully created member. Banner id: ".$user_vars['banner_id'].", orgsync id: $user->id";
+  //if($success)
+  //$log_str .= "Successfully created member. Banner id: ".$user_vars['banner_id'].", orgsync id: $user->userId";
 
   //fwrite($log_handle, $log_str);
   echo $log_str;
@@ -582,8 +582,9 @@ function updateUser($user){
       $success = FALSE;
     }
   }
-  if($success)
-    $log_str .= "Successfully updated user. Banner id: ".$user_vars['banner_id'].", orgsync id: $user->id";
+
+  //if($success)
+  //$log_str .= "Successfully updated user. Banner id: ".$user_vars['banner_id'].", appsync id: $user->userId";
 
   //fwrite($log_handle, $log_str);
   echo $log_str;
@@ -597,7 +598,6 @@ function getUserVars($user){
   $user_vars['first_name'] = pg_escape_string($user->firstName);
   $user_vars['last_name'] = pg_escape_string($user->lastName);
   $user_vars['updated'] = time();
-  $profile_responses = $user->profile_responses;
   $gender = $user->sex->value;
   if($gender == "Male")
       $gender = "M";
@@ -605,14 +605,15 @@ function getUserVars($user){
       $gender = "F";
   else
       $gender = NULL;
+  $user_vars['gender'] = $gender;
   $user_vars['ethnicity'] = translateEthnicity($user->ethnicity->value);  
   $user_vars['banner_id'] = $user->cardId;
   $user_vars['citizen'] = "Y";
   if($user->international->value == "True")
       $user_vars['citizen'] = "N";
-  $user_vars['transfer'] = FALSE;
+  $user_vars['transfer'] = 0;
   if($user->transfer->value == "True")
-      $user_vars['transfer'] = TRUE;
+      $user_vars['transfer'] = 1;
   $class = "";
   $type = "";
   $level = "G";
