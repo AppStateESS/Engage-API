@@ -98,53 +98,45 @@ function getGroupMembers($group_id) {
 }
 
 function getAllOrganizations(){
-  global $key, $base_url;
-  $curl = curl_init();
-  curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-  
-  //Request list of all orginizations
-  curl_setopt($curl, CURLOPT_URL, $base_url."orgs?key=$key");
+    $endpoint = "Organizations";
+    $query_string = "pageSize=500";
+    $result = curlGet($endpoint, $query_string);
+    $all_orgs = FALSE;
+    
+    if($result && !empty($result->items)){
+        $total_pages = $result->totalPages;
+        if($total_pages > 1){
+            $all_orgs = combinePages($endpoint, $query_string);
+        } else {
+            $all_orgs = $result->items;
+        }
+    }
 
-  $all_org = curl_exec($curl);
-
-  if($all_org){
-    $all_org = json_decode($all_org);
-  }else{
-    $all_org = FALSE;
-  }
-  
-  curl_close($curl);
-  return $all_org;
+    return $all_orgs;
 }
 
 function getOrgByID($org_id){
-  global $key, $base_url;
-  $curl = curl_init();
-  //get organization by orgsync id
-  curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $base_url."orgs/$org_id?key=$key"));
-  $org = curl_exec($curl);
-  if($org){
-    $org = json_decode($org);
-  }else{
-    $org = FALSE;
-  }
-  curl_close($curl);
-  return $org;
+    $endpoint = "Organizations/$org_id";
+    //get organization by orgsync id
+    return curlGet($endpoint);
 }
 
 function getOrgMembers($org_id){
-  global $key, $base_url;
-  $curl = curl_init();
-  //get organization members by organization id
-  curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $base_url."orgs/$org_id/accounts?key=$key"));
-  $org_members = curl_exec($curl);
-  if($org_members){
-    $org_members = json_decode($org_members);
-  }else{
+    $endpoint = "Memberships";
+    $query_string = "pageSize=500&organizationId=$org_id";
+    //get organization members by organization id
     $org_members = FALSE;
-  }
-  curl_close($curl);
-  return $org_members;
+    $result = curlGet($endpoint, $query_string);
+    
+    if($result && !empty($result->items)){
+        $total_pages = $result->totalPages;
+        if($total_pages > 1){
+            $org_members = combinePages($endpoint, $query_string);
+        } else {
+            $org_members = $result->items;
+        }
+    }
+    return $org_members;
 }
 
 /**
@@ -152,6 +144,8 @@ function getOrgMembers($org_id){
  *
  *
  */
+
+/** NEEDS TO BE REWRITTEN FOR NEW API **/
 function removeAccount($user_ids, $org_id){
     global $key, $base_url;
     $url = $base_url."/orgs/$org_id/accounts/remove";
@@ -537,6 +531,41 @@ function removeIDCard($card_id){
             return FALSE;
         }
     }
+}
+
+function combinePages($endpoint, $query_string) {
+    $result = curlGet($endpoint, $query_string);
+    $combined = array();
+    if(!empty($query_string)) {
+        $query_string .= "&";
+    }
+
+    if($result) {
+        $totalPages = $result->totalPages;
+        for($i = 1; $i <= $totalPages; $i++) {
+            $page = curlGet($endpoint, $query_string."page=$i");
+            $combined = array_merge($combined, $page->items);
+        }
+    } else {
+        return false;
+    }
+
+    return $combined;
+}
+
+function curlGet($endpoint, $query_string="") {
+    global $key, $base_url;
+    if(!empty($query_string)){
+        $query_string = "?$query_string";
+    }
+    $curl = curl_init();
+    curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $base_url.$endpoint.$query_string));
+    curl_setopt($curl, CURLOPT_HTTPHEADER, array(
+        'Accept: application/json',
+        'X-Engage-Api-Key: ' . $key));
+    $result = curl_exec($curl);
+    curl_close($curl);
+    return json_decode($result);
 }
 
 ?>

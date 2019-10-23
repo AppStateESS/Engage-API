@@ -96,8 +96,7 @@ function syncOrgMemberships($org, $sdr_org_id){
         }
         updateMembership($banner_id, $sdr_org_id);
     } else {
-        //fwrite($log_handle, "Sync Org Memberships Error: Account has no card id. user id: ".$member->userId.", username: $username, first name: $first_name, last name: $last_name"."\r\n");
-        echo "Sync Org Memberships Error: Account has no card id. user id: ".$member->userId.", username: $username, first name: $first_name, last name: $last_name"."\r\n";
+        fwrite($log_handle, "Sync Org Memberships Error: Account has no card id. user id: ".$member->userId.", username: $username, first name: $first_name, last name: $last_name"."\r\n");
     }
   }
 }
