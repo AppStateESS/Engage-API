@@ -288,23 +288,6 @@ function getIDFromEmail($email){
     return $id;
 }
 
-function getAccountFromUsername($username){
-    global $key, $base_url;    
-
-    $curl = curl_init();
-    curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $base_url."accounts/username/$username?key=$key"));
-    $result = curl_exec($curl);
-    curl_close($curl);
-  
-    if($result){
-        $result = json_decode($result);
-        return $result;
-    }
-    
-    return false;
-    
-}
-
 function getAccountFromEmail($email){
     global $key, $base_url;    
 

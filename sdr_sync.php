@@ -37,7 +37,7 @@ $testorg = 284356; //test org 284356
 //$result = getOrgMembers($testorg);
 //$result = getUserByBannerID(900799123);
 //$result = getOrgByID($testorg);
-//$id = getIDFromEmail('morrisonta@appstate.edu');
+//$id = getIDFromEmail('lightfootdl@appstate.edu');
 //$result = getUserByID($id);
 //var_dump($result);exit;
 
