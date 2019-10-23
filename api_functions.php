@@ -183,6 +183,7 @@ function removeAccount($user_ids, $org_id){
     }
 }
 
+/** NEEDS TO BE REWRITTEN FOR NEW **/
 function removeGroupAccount($user_ids, $group_id){
     global $key, $base_url;
     $ids = '';
@@ -272,22 +273,19 @@ function deleteAccount($account_id){
     }
 }
 
-function getIDFromUsername($username){
-    global $key, $base_url;    
+function getIDFromEmail($email){
+    $endpoint = "Users/";
+    $query_string = "username=".urlencode($email);
+    $id = FALSE;
+    
+    $result = curlGet($endpoint, $query_string);
 
-    $curl = curl_init();
-    curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $base_url."accounts/username/$username?key=$key"));
-    $result = curl_exec($curl);
-    curl_close($curl);
-  
-    if($result){
-        $result = json_decode($result);
-        if(!empty($result->id))
-            return $result->id;
+    if(!empty($result->items)) {
+        $user = $result->items;
+        $id = $user[0]->userId;
     }
-    
-    return false;
-    
+
+    return $id;
 }
 
 function getAccountFromUsername($username){
