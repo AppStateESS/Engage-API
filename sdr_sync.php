@@ -30,16 +30,17 @@ $sdr_term = setCurrentTerm();
 //  fwrite($log_handle, "Something went wrong setting the current term in mod_settings for sdr. term: $current_term");
 
 // Run main control function
-syncOrganizations();
+//syncOrganizations();
 
 // For testing purposes
 $testorg = 284356; //test org 284356
 //$result = getOrgMembers($testorg);
 //$result = getUserByBannerID(900799123);
 //$result = getOrgByID($testorg);
+$result = getOrgPositions($testorg);
 //$id = getIDFromEmail('lightfootdl@appstate.edu');
 //$result = getUserByID($id);
-//var_dump($result);exit;
+var_dump($result);exit;
 
 //initIDMap();
 
@@ -657,6 +658,23 @@ function getAllOrganizations(){
     }
 
     return $all_orgs;
+}
+
+function getOrgPositions($org_id){
+    $endpoint = "Positions";
+    $query_string = "organizationId=$org_id";
+    $result = curlGet($endpoint, $query_string);
+
+    if($result && !empty($result->items)){
+        $total_pages = $result->totalPages;
+        if($total_pages > 1){
+            $positions = combinePages($endpoint, $query_string);
+        } else {
+            $positions = $result->items;
+        }
+    }
+
+    return $positions;
 }
 
 function getOrgByID($org_id){
