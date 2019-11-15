@@ -37,12 +37,12 @@ $testorg = 284356; //test org 284356
 //$result = getOrgMembers($testorg);
 //$result = getUserByBannerID(900799123);
 //$result = getOrgByID($testorg);
-$result = getOrgPositions($testorg);
+//$result = getOrgPositions($testorg);
 //$id = getIDFromEmail('lightfootdl@appstate.edu');
 //$result = getUserByID($id);
-var_dump($result);exit;
+//var_dump($result);exit;
 
-//initIDMap();
+initIDMap();exit;
 
 //fclose($log_handle); // close log file
 //fclose($role_log_handle);
