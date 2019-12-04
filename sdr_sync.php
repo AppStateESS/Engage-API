@@ -345,7 +345,12 @@ function createOrganization($org){
   $sdr_org_id = 0;
 
   $org_cat = getOrgCategory($org->categories);
-
+  if(in_array($org_cat, $greek_categories)) {
+      $org_cat = getGreekType($org_id);
+  } else {
+      $org_cat = $organization_cats[$org_cat];
+  }
+  
   $addresss = NULL; // not setting this
   $bank = "";
   $ein = "";
@@ -359,19 +364,6 @@ function createOrganization($org){
   $description = "<p>".$description."</p>";
   $site_url = $org->externalWebsite;
   $contact_info = NULL; // not setting this
-
-  /**
-  foreach($custom_fields as $value){
-    if($value->element->type == "Meeting Location")
-      $meeting_location = pg_escape_string($value->data);
-    if($value->element->type == "Name of Bank")
-      $bank = pg_escape_string($value->data);
-    if($value->element->type == "EIN/Tax ID #")
-      $ein = pg_escape_string($value->data);
-    if($value->element->type == "Organization Goals")
-      $purpose = pg_escape_string($value->data);
-  }
-  */
 
   $query = "SELECT NEXTVAL('sdr_organization_seq')";
   $id_result = pg_query($query);
@@ -450,10 +442,12 @@ function updateOrganization($org, $sdr_id){
   $short_name = pg_escape_string($org->shortName);
   $org_id = $org->organizationId;
 
-  if(!empty($organization_cats[$org->typeId]))
-    $org_cat = $organization_cats[$org->typeId];
-  else
-    $org_cat = $organization_cats['default'];
+  $org_cat = getOrgCategory($org->categories);
+  if(in_array($org_cat, $greek_categories)) {
+      $org_cat = getGreekType($org_id);
+  } else {
+      $org_cat = $organization_cats[$org_cat];
+  }
 
   $addresss = NULL; // not setting this
   $bank = "";
@@ -469,23 +463,6 @@ function updateOrganization($org, $sdr_id){
   $site_url = $org->externalWebsite;
   $contact_info = NULL; // not setting this
 
-  /** not using right now
-  foreach($customFields as $value){
-    if($value->element->type == "Meeting Location")
-      $meeting_location = pg_escape_string($value->data);
-    if($value->element->type == "Name of Bank")
-      $bank = pg_escape_string($value->data);
-    if($value->element->type == "EIN/Tax ID #")
-      $ein = pg_escape_string($value->data);
-    if($value->element->type == "Organization Goals")
-      $purpose = pg_escape_string($value->data);
-  }
-  */
-
-  if($org_cat == 'greek'){ 
-    $org_cat = getGreekType($org->organizationId);
-  }
-  
   //Add new organization instance. First check if its already been added.  If so do not call nextval just update it.
   $query = "SELECT * FROM sdr_organization_instance WHERE organization_id='$sdr_id' AND term='$current_term'";
   $result = pg_query($query);
@@ -765,10 +742,11 @@ function getBannerIDFromEmail($email){
 }
 
 function getOrgCategory($org_cats) {
-    $category = null;
+    $category = 'default';
     foreach($org_cats as $cat){
         if(in_array($cat->categoryId, $admin_categories)){
             $org_cat = $cat->categoryId;
+            break;
         }
     }
 
