@@ -36,10 +36,10 @@ $testorg = 284356; //test org 284356
 //$result = getOrgMembers($testorg);
 //$result = getUserByBannerID(900799123);
 //$result = getOrgByID($testorg);
-//$result = getOrgPositions($testorg);
+$result = getOrgPositions($testorg);
 //$id = getIDFromEmail('lightfootdl@appstate.edu');
 //$result = getUserByID($id);
-//var_dump($result);exit;
+var_dump($result);exit;
 
 //initIDMap();exit;
 
@@ -107,53 +107,6 @@ function updateOrgRoles($org, $sdr_org_id){
   $org_role_error = '';
   $log_str = '';
   $success = TRUE;
-  $officers_ids = array();
-  $groups = $org->groups;
-  $profile_responses = $org->profile_responses;
-  
-  foreach($profile_responses as $value){
-    switch ($value->element->id)
-      {
-      case PRESIDENT_ELEMENT_ID:
-	$president_name = $value->data;
-	break;
-      case PRESIDENT_EMAIL_ELEMENT_ID:
-	$president_email = $value->data;
-	break;
-      case OFFICER2_ELEMENT_ID:
-	$officer2_name = $value->data;
-	break;
-      case OFFICER2_EMAIL_ELEMENT_ID:
-	$officer2_email = $value->data;
-	break;
-      case OFFICER3_ELEMENT_ID:
-	$officer3_name = $value->data;
-	break;
-      case OFFICER3_EMAIL_ELEMENT_ID:
-	$officer3_email = $value->data;
-	break;
-      case OFFICER4_ELEMENT_ID:
-	$officer4_name = $value->data;
-	break;
-      case OFFICER4_EMAIL_ELEMENT_ID:
-	$officer4_email = $value->data;
-	break;
-      case TREASURER_ELEMENT_ID:
-	$treasurer_name = $value->data;
-	break;
-      case TREASURER_EMAIL_ELEMENT_ID:
-	$treasurer_email = $value->data;
-	break;
-      case ADVISOR_ELEMENT_ID:
-	$advisor_name = $value->data;
-	break;
-      case ADVISOR_EMAIL_ELEMENT_ID:
-	$advisor_email = $value->data;
-	break;
-      default:
-	break;
-      } 
-  }
 
   if(!empty($president_email)){  
     $president = getBannerIDFromEmail($president_email);
@@ -205,17 +158,7 @@ function updateOrgRoles($org, $sdr_org_id){
   }else{
     $org_role_error .= "$org->short_name treasurer email is blank."."\r\n";
   }
-  if(!empty($advisor_email)){
-    $advisor = getBannerIDFromEmail($advisor_email);
-    if(!$advisor){
-      $org_role_error .= "There was a problem mapping a member to $org->short_name advisor role. Org id is $org->id . Member email address is $advisor_email. Member name is $advisor_name."."\r\n";
-    }else{
-      $officers_ids[$advisor] = 'advisor';
-    }
-  }else{
-    $org_role_error .= "$org->short_name advisor email is blank."."\r\n";
-  }
- 
+
   foreach($groups as $group){
     if($group->name == ORGSYNC_NEW_MEMBER_GROUP && count($group->account_ids) > 0){
       foreach($group->account_ids as $account_id){
@@ -230,7 +173,12 @@ function updateOrgRoles($org, $sdr_org_id){
       }
     }
   }
- 
+  
+  // Check if the position template id = new member
+  if($postion->templateId == '21019'){
+      $role = NEW_MEMBER_ROLE;
+  }
+  
   foreach($officers_ids as $key=>$value){
     $role = NULL;
     $query = "SELECT * FROM sdr_membership WHERE member_id=$key AND organization_id=$sdr_org_id AND term='$current_term'";
@@ -241,32 +189,28 @@ function updateOrgRoles($org, $sdr_org_id){
       
       switch ($value) 
 	{
-	case 'president':
+	case '16526':
 	  $role = PRESIDENT_ROLE;
 	  break;
-	case 'officer2':
+	case '16528':
 	  $role = VP_ROLE;
 	  break;
-	case 'officer3':
-	  $role = OFFICER_ROLE;
-	  break;
-	case 'officer4':
-	  $role = OFFICER_ROLE;
-	  break;
-	case 'treasurer':
+    case '16529':
+        $role = SECRETARY;
+        break;
+	case '16530':
 	  $role = TREASURER_ROLE;
 	  break;
-	case 'advisor':
+	case '16527':
 	  $role = ADVISOR_ROLE;
 	  break;
-	case 'officer':
-	  $role = OFFICER_ROLE;
-	  break;
-	case 'new_member':
-	  $role = NEW_MEMBER_ROLE;
-	  break;
+    case '16533':
+    case '16532':
+    case '16531':
+        $role = CHAIR;
+        break;
 	default:
-	  $role = NULL;
+	  $role = OFFICER_ROLE;
 	  break;
 	}
 
