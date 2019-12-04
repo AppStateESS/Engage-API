@@ -17,7 +17,6 @@ $exclude_orgs = array(95550,878950);  // These are some organizations in OrgSync
 $log_file = 'sdr_sync_error.log';
 $role_log_file = 'org_roles_error.log';
 $current_term = "";
-$organization_cats = array("default"=>106,55007=>102,55031=>10,55016=>'greek',55032=>106,55510=>102,55017=>102,57267=>3,55019=>103,55024=>106,55026=>9,55027=>17,55028=>18,55029=>20,55030=>106,55018=>5,55006=>23,55022=>5);  // associative array to map orgsync categories to sdr org types
 
 // Open logs for writing
 //$log_handle = fopen($log_file, 'r+');
@@ -42,7 +41,7 @@ $testorg = 284356; //test org 284356
 //$result = getUserByID($id);
 //var_dump($result);exit;
 
-initIDMap();exit;
+//initIDMap();exit;
 
 //fclose($log_handle); // close log file
 //fclose($role_log_handle);
@@ -345,10 +344,7 @@ function createOrganization($org){
   $org_id = $org->organizationId;
   $sdr_org_id = 0;
 
-  if(!empty($organization_cats[$org->typeId]))
-    $org_type = $organization_cats[$org->typeId];
-  else
-    $org_type = $organization_cats['default'];
+  $org_cat = getOrgCategory($org->categories);
 
   $addresss = NULL; // not setting this
   $bank = "";
@@ -377,10 +373,6 @@ function createOrganization($org){
   }
   */
 
-  if($org_type == 'greek'){ 
-    $org_type = getGreekType($org->organizationId);
-  }
-
   $query = "SELECT NEXTVAL('sdr_organization_seq')";
   $id_result = pg_query($query);
   
@@ -403,7 +395,7 @@ function createOrganization($org){
       if($instance_result){
 	$instance_result = pg_fetch_row($instance_result);
 	$instance_id = $instance_result[0];
-	$query = "INSERT INTO sdr_organization_instance (id, organization_id, term, name, type, address, bank, ein, shortname) values($instance_id, $sdr_org_id, $current_term, '$long_name', '$org_type', NULL, '$bank', '$ein', '$short_name')";
+	$query = "INSERT INTO sdr_organization_instance (id, organization_id, term, name, type, address, bank, ein, shortname) values($instance_id, $sdr_org_id, $current_term, '$long_name', '$org_cat', NULL, '$bank', '$ein', '$short_name')";
 	if(!pg_query($query)){
 	  $log_str .= "Create Organization Error: Could not create organization instance. query: $query"."\r\n";
 	  $success = FALSE;
@@ -459,9 +451,9 @@ function updateOrganization($org, $sdr_id){
   $org_id = $org->organizationId;
 
   if(!empty($organization_cats[$org->typeId]))
-    $org_type = $organization_cats[$org->typeId];
+    $org_cat = $organization_cats[$org->typeId];
   else
-    $org_type = $organization_cats['default'];
+    $org_cat = $organization_cats['default'];
 
   $addresss = NULL; // not setting this
   $bank = "";
@@ -490,8 +482,8 @@ function updateOrganization($org, $sdr_id){
   }
   */
 
-  if($org_type == 'greek'){ 
-    $org_type = getGreekType($org->organizationId);
+  if($org_cat == 'greek'){ 
+    $org_cat = getGreekType($org->organizationId);
   }
   
   //Add new organization instance. First check if its already been added.  If so do not call nextval just update it.
@@ -503,7 +495,7 @@ function updateOrganization($org, $sdr_id){
     if($instance_result){
       $instance_result = pg_fetch_row($instance_result);
       $instance_id = $instance_result[0];
-      $query = "INSERT INTO sdr_organization_instance (id, organization_id, term, name, type, address, bank, ein, shortname) values($instance_id, $sdr_id, $current_term, '$long_name', '$org_type', NULL, '$bank', '$ein', '$short_name')";
+      $query = "INSERT INTO sdr_organization_instance (id, organization_id, term, name, type, address, bank, ein, shortname) values($instance_id, $sdr_id, $current_term, '$long_name', '$org_cat', NULL, '$bank', '$ein', '$short_name')";
       if(!pg_query($query)){
 	$log_str .= "Update Organization Error: Could not create organization instance. query: $query"."\r\n";
 	$success = FALSE;
@@ -770,6 +762,17 @@ function getBannerIDFromEmail($email){
   }else{
     return false;
   }
+}
+
+function getOrgCategory($org_cats) {
+    $category = null;
+    foreach($org_cats as $cat){
+        if(in_array($cat->categoryId, $admin_categories)){
+            $org_cat = $cat->categoryId;
+        }
+    }
+
+    return $category;
 }
 
 function getGreekType($org_id){
