@@ -66,7 +66,6 @@ function syncOrganizations(){
                   }
                   if($sdr_org_id){
                       syncOrgMemberships($org, $sdr_org_id);
-                      //	    updateOrgRoles($org, $sdr_org_id);
                   }
               }
           }
