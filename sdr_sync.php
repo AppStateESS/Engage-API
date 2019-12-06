@@ -33,10 +33,10 @@ $sdr_term = setCurrentTerm();
 
 // For testing purposes
 $testorg = 284356; //test org 284356
-//$result = getOrgMembers($testorg);
+$result = getOrgMembers($testorg);
 //$result = getUserByBannerID(900799123);
 //$result = getOrgByID($testorg);
-$result = getOrgPositions($testorg);
+//$result = getOrgPositions($testorg);
 //$id = getIDFromEmail('lightfootdl@appstate.edu');
 //$result = getUserByID($id);
 var_dump($result);exit;
@@ -98,145 +98,84 @@ function syncOrgMemberships($org, $sdr_org_id){
     } else {
         fwrite($log_handle, "Sync Org Memberships Error: Account has no card id. user id: ".$member->userId.", username: $username, first name: $first_name, last name: $last_name"."\r\n");
     }
+
+    if(!empty($postion_id)) {
+        updateRole($member, $banner_id, $sdr_org_id);
+    }
   }
 }
 
-function updateOrgRoles($org, $sdr_org_id){
-  // parse organization and find president and the 4 officers.  Mark president as president then officer #2 as VP.  Other officers will be marked as general officers.  Then look to see if there is a treasurer and advisor and set those.  Make sure to update sdr_membership table so you mark the appropriate people as administrators. 
+function updateRole($member, $banner_id, $sdr_org_id){
   global $log_handle, $role_log_handle, $current_term;
   $org_role_error = '';
   $log_str = '';
   $success = TRUE;
-
-  if(!empty($president_email)){  
-    $president = getBannerIDFromEmail($president_email);
-    if(!$president){
-      $org_role_error .= "There was a problem mapping a member to $org->short_name president role. Org id is $org->id . Member email address is $president_email. Member name is $president_name."."\r\n";
-    }else{
-      $officers_ids[$president] = 'president';
-    }
-  }else{
-    $org_role_error .= "$org->short_name president email is blank."."\r\n";
-  }
-  if(!empty($officer2_email)){
-    $officer2 = getBannerIDFromEmail($officer2_email);
-    if(!$officer2){
-      $org_role_error .= "There was a problem mapping a member to $org->short_name vice president role. Org id is $org->id . Member email address is $officer2_email. Member name is $officer2_name."."\r\n";
-    }else{
-      $officers_ids[$officer2] = 'officer2';
-    }
-  }else{
-    $org_role_error .= "$org->short_name officer 2 email is blank."."\r\n";
-  }
-  if(!empty($officer3_email)){
-    $officer3 = getBannerIDFromEmail($officer3_email);
-    if(!$officer3){
-      $org_role_error .= "There was a problem mapping a member to $org->short_name officer3 role. Org id is $org->id . Member email address is $officer3_email. Member name is $officer3_name."."\r\n";
-    }else{
-      $officers_ids[$officer3] = 'officer3';
-    }
-  }else{
-    $org_role_error .= "$org->short_name officer 3 email is blank."."\r\n";
-  }
-  if(!empty($officer4_email)){
-    $officer4 = getBannerIDFromEmail($officer4_email);
-    if(!$officer4){
-      $org_role_error .= "There was a problem mapping a member to $org->short_name officer4 role. Org id is $org->id . Member email address is $officer4_email. Member name is $officer4_name."."\r\n";
-    }else{
-      $officers_ids[$officer4] = 'officer4';
-    }
-  }else{
-    $org_role_error .= "$org->short_name officer 4 email is blank."."\r\n";
-  }
-  if(!empty($treasurer_email)){
-    $treasurer = getBannerIDFromEmail($treasurer_email);
-    if(!$treasurer){
-      $org_role_error .= "There was a problem mapping a member to $org->short_name treasurer role. Org id is $org->id . Member email address is $treasurer_email. Member name is $treasurer_name."."\r\n";
-    }else{
-      $officers_ids[$treasurer] = 'treasurer';
-    }
-  }else{
-    $org_role_error .= "$org->short_name treasurer email is blank."."\r\n";
-  }
-
-  foreach($groups as $group){
-    if($group->name == ORGSYNC_NEW_MEMBER_GROUP && count($group->account_ids) > 0){
-      foreach($group->account_ids as $account_id){
-	$account_vars = getUserVars(getAccountByID($account_id));
-	$officers_ids[$account_vars['banner_id']] = 'new_member';
-      }
-    }
-    if($group->name == ORGSYNC_OFFICER_GROUP && count($group->account_ids) > 0){
-      foreach($group->account_ids as $account_id){
-	$account_vars = getUserVars(getAccountByID($account_id));
-	$officers_ids[$account_vars['banner_id']] = 'officer';
-      }
-    }
-  }
+  $position_id = $member->positionTemplateId;
+  $position_type_id = $member->positionTypeId;
+  $role = null;
   
   // Check if the position template id = new member
-  if($postion->templateId == '21019'){
+  if($postion_id == '21019'){
       $role = NEW_MEMBER_ROLE;
   }
   
-  foreach($officers_ids as $key=>$value){
-    $role = NULL;
-    $query = "SELECT * FROM sdr_membership WHERE member_id=$key AND organization_id=$sdr_org_id AND term='$current_term'";
-    $result = pg_query($query);
-    if($result && pg_num_rows($result) > 0){
+  $query = "SELECT * FROM sdr_membership WHERE member_id=$key AND organization_id=$sdr_org_id AND term='$current_term'";
+  $result = pg_query($query);
+  if($result && pg_num_rows($result) > 0){
       $row = pg_fetch_assoc($result);
       $membership_id = $row['id'];
       
-      switch ($value) 
-	{
-	case '16526':
-	  $role = PRESIDENT_ROLE;
-	  break;
-	case '16528':
-	  $role = VP_ROLE;
-	  break;
-    case '16529':
-        $role = SECRETARY;
-        break;
-	case '16530':
-	  $role = TREASURER_ROLE;
-	  break;
-	case '16527':
-	  $role = ADVISOR_ROLE;
-	  break;
-    case '16533':
-    case '16532':
-    case '16531':
-        $role = CHAIR;
-        break;
-	default:
-	  $role = OFFICER_ROLE;
-	  break;
-	}
+      if($positions_type_id == OFFICER_TYPE) {
+          switch ($value) 
+          {
+          case '16526':
+              $role = PRESIDENT_ROLE;
+              break;
+          case '16528':
+              $role = VP_ROLE;
+              break;
+          case '16529':
+              $role = SECRETARY;
+              break;
+          case '16530':
+              $role = TREASURER_ROLE;
+              break;
+          case '16527':
+              $role = ADVISOR_ROLE;
+              break;
+          case '16533':
+          case '16532':
+          case '16531':
+              $role = CHAIR;
+              break;
+          default:
+              $role = OFFICER_ROLE;
+              break;
+          }
+      }
 
       if(!empty($role)){
-	$query = "SELECT * FROM sdr_membership_role WHERE membership_id=$membership_id AND role_id=$role";
-	$result = pg_query($query);
-	if(pg_num_rows($result) == 0){
-	  $query = "INSERT INTO sdr_membership_role (membership_id, role_id) VALUES($membership_id, $role)";
-	  if(!pg_query($query))
-	    $log_str .= "Update Membership Role Error: Failed to insert $value role. query: $query"."\r\n";
-	  if($role != NEW_MEMBER_ROLE){	  
-	      $query = "UPDATE sdr_membership SET administrator=1 WHERE member_id=$key AND organization_id=$sdr_org_id AND term=$current_term";
-	      if(!pg_query($query))
-	        $log_str = "Update Memberhsip Role Error: Failed to update $value to adminstrator. query: $query"."\r\n";	
-	  }
-	}else{
-	  $query = "UPDATE sdr_membership_role SET role_id=$role WHERE membership_id=$membership_id";
-	  if(!pg_query($query))
-	      $log_str = "Update Memberhsip Role Error: Failed to update membership role. Membership id = $membership_id. Role = $role. Query: $query"."\r\n";	
-	}
+          $query = "SELECT * FROM sdr_membership_role WHERE membership_id=$membership_id AND role_id=$role";
+          $result = pg_query($query);
+          if(pg_num_rows($result) == 0){
+              $query = "INSERT INTO sdr_membership_role (membership_id, role_id) VALUES($membership_id, $role)";
+              if(!pg_query($query))
+                  $log_str .= "Update Membership Role Error: Failed to insert $value role. query: $query"."\r\n";
+              if($role != NEW_MEMBER_ROLE){	  
+                  $query = "UPDATE sdr_membership SET administrator=1 WHERE member_id=$key AND organization_id=$sdr_org_id AND term=$current_term";
+                  if(!pg_query($query))
+                      $log_str = "Update Memberhsip Role Error: Failed to update $value to adminstrator. query: $query"."\r\n";	
+              }
+          }else{
+              $query = "UPDATE sdr_membership_role SET role_id=$role WHERE membership_id=$membership_id";
+              if(!pg_query($query))
+                  $log_str = "Update Memberhsip Role Error: Failed to update membership role. Membership id = $membership_id. Role = $role. Query: $query"."\r\n";	
+          }
       }
-    }
   }
   
   if($success)
-    $log_str .= "Successfully updated membership roles.  sdr org id: $sdr_org_id"."\r\n";
+      $log_str .= "Successfully updated membership roles.  sdr org id: $sdr_org_id"."\r\n";
   fwrite($log_handle, $log_str);
   fwrite($role_log_handle, $org_role_error);
 }
@@ -689,7 +628,7 @@ function getOrgCategory($org_cats) {
     $category = 'default';
     foreach($org_cats as $cat){
         if(in_array($cat->categoryId, $admin_categories)){
-            $org_cat = $cat->categoryId;
+            $category = $cat->categoryId;
             break;
         }
     }
