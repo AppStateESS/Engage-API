@@ -114,11 +114,11 @@ function updateRole($member, $banner_id, $sdr_org_id){
   $role = null;
   
   // Check if the position template id = new member
-  if($postion_id == '21019'){
+  if($position_id == '21019'){
       $role = NEW_MEMBER_ROLE;
   }
   
-  $query = "SELECT * FROM sdr_membership WHERE member_id=$key AND organization_id=$sdr_org_id AND term='$current_term'";
+  $query = "SELECT * FROM sdr_membership WHERE member_id=$banner_id AND organization_id=$sdr_org_id AND term='$current_term'";
   $result = pg_query($query);
   if($result && pg_num_rows($result) > 0){
       $row = pg_fetch_assoc($result);
@@ -175,8 +175,9 @@ function updateRole($member, $banner_id, $sdr_org_id){
   
   if($success)
       $log_str .= "Successfully updated membership roles.  sdr org id: $sdr_org_id"."\r\n";
-  fwrite($log_handle, $log_str);
-  fwrite($role_log_handle, $org_role_error);
+  //fwrite($log_handle, $log_str);
+  //fwrite($role_log_handle, $org_role_error);
+  echo $log_str;
 }
 
 function updateMembership($member_id, $sdr_org_id){
