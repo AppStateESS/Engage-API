@@ -24,22 +24,23 @@ $current_term = "";
 
 
 $sdr_term = setCurrentTerm();
+
 // Update the current term in SDR
-//if(!$sdr_term)
-//  fwrite($log_handle, "Something went wrong setting the current term in mod_settings for sdr. term: $current_term");
+if(!$sdr_term)
+  fwrite($log_handle, "Something went wrong setting the current term in mod_settings for sdr. term: $current_term");
 
 // Run main control function
-//syncOrganizations();
+syncOrganizations();
 
 // For testing purposes
-$testorg = 284356; //test org 284356
-$result = getOrgMembers($testorg);
+//$testorg = 284356; //test org 284356
+//$result = getOrgMembers($testorg);
 //$result = getUserByBannerID(900799123);
 //$result = getOrgByID($testorg);
 //$result = getOrgPositions($testorg);
 //$id = getIDFromEmail('lightfootdl@appstate.edu');
 //$result = getUserByID($id);
-var_dump($result);exit;
+//var_dump($result);exit;
 
 //initIDMap();exit;
 
@@ -315,7 +316,7 @@ function createOrganization($org){
 }
 
 function updateOrganization($org, $sdr_id){
-  global $log_file, $log_handle, $current_term, $organization_cats;
+    global $log_file, $log_handle, $current_term, $organization_cats, $greek_categories;
   $log_str = '';
   $success = TRUE;
   
@@ -624,6 +625,7 @@ function getBannerIDFromEmail($email){
 }
 
 function getOrgCategory($org_cats) {
+    global $admin_categories;
     $category = 'default';
     foreach($org_cats as $cat){
         if(in_array($cat->categoryId, $admin_categories)){
