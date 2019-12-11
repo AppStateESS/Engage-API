@@ -98,7 +98,7 @@ function syncOrgMemberships($org, $sdr_org_id){
         fwrite($log_handle, "Sync Org Memberships Error: Account has no card id. user id: ".$member->userId.", username: $username, first name: $first_name, last name: $last_name"."\r\n");
     }
 
-    if(!empty($member->positionTemplateId)) {
+    if(!empty($member->positionTemplateId) && !empty($banner_id)) {
         updateRole($member, $banner_id, $sdr_org_id);
     }
   }
