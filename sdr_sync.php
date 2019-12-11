@@ -114,18 +114,18 @@ function updateRole($member, $banner_id, $sdr_org_id){
   $role = null;
   
   // Check if the position template id = new member
-  if($postion_id == '21019'){
+  if($position_id == '21019'){
       $role = NEW_MEMBER_ROLE;
   }
   
-  $query = "SELECT * FROM sdr_membership WHERE member_id=$key AND organization_id=$sdr_org_id AND term='$current_term'";
+  $query = "SELECT * FROM sdr_membership WHERE member_id=$banner_id AND organization_id=$sdr_org_id AND term='$current_term'";
   $result = pg_query($query);
   if($result && pg_num_rows($result) > 0){
       $row = pg_fetch_assoc($result);
       $membership_id = $row['id'];
       
-      if($positions_type_id == OFFICER_TYPE) {
-          switch ($value) 
+      if($position_type_id == OFFICER_TYPE) {
+          switch ($position_id) 
           {
           case '16526':
               $role = PRESIDENT_ROLE;
@@ -159,14 +159,14 @@ function updateRole($member, $banner_id, $sdr_org_id){
           if(pg_num_rows($result) == 0){
               $query = "INSERT INTO sdr_membership_role (membership_id, role_id) VALUES($membership_id, $role)";
               if(!pg_query($query))
-                  $log_str .= "Update Membership Role Error: Failed to insert $value role. query: $query"."\r\n";
+                  $log_str .= "Update Membership Role Error: Failed to insert $position_id role. query: $query"."\r\n";
               if($role != NEW_MEMBER_ROLE){	  
-                  $query = "UPDATE sdr_membership SET administrator=1 WHERE member_id=$key AND organization_id=$sdr_org_id AND term=$current_term";
+                  $query = "UPDATE sdr_membership SET administrator=1 WHERE member_id=$banner_id AND organization_id=$sdr_org_id AND term=$current_term";
                   if(!pg_query($query))
-                      $log_str = "Update Memberhsip Role Error: Failed to update $value to adminstrator. query: $query"."\r\n";	
+                      $log_str = "Update Memberhsip Role Error: Failed to update $position_id to adminstrator. query: $query"."\r\n";	
               }
           }else{
-              $query = "UPDATE sdr_membership_role SET role_id=$role WHERE membership_id=$membership_id";
+              $query = "UPDATE sdr_membership_role SET role_id=$position_id WHERE membership_id=$membership_id";
               if(!pg_query($query))
                   $log_str = "Update Memberhsip Role Error: Failed to update membership role. Membership id = $membership_id. Role = $role. Query: $query"."\r\n";	
           }
@@ -175,8 +175,9 @@ function updateRole($member, $banner_id, $sdr_org_id){
   
   if($success)
       $log_str .= "Successfully updated membership roles.  sdr org id: $sdr_org_id"."\r\n";
-  fwrite($log_handle, $log_str);
-  fwrite($role_log_handle, $org_role_error);
+  //fwrite($log_handle, $log_str);
+  //fwrite($role_log_handle, $org_role_error);
+  echo $log_str;
 }
 
 function updateMembership($member_id, $sdr_org_id){
