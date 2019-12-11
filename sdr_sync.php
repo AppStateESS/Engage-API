@@ -29,17 +29,17 @@ if(!$sdr_term)
   fwrite($log_handle, "Something went wrong setting the current term in mod_settings for sdr. term: $current_term");
 
 // Run main control function
-//syncOrganizations();
+syncOrganizations();
 
 // For testing purposes
 //$testorg = 284356; //test org 284356
 //$result = getOrgMembers($testorg);
 //$result = getUserByBannerID(900799123);
-$result = getOrgByID(232015);
+//$result = getOrgByID(232015);
 //$result = getOrgPositions($testorg);
 //$id = getIDFromEmail('lightfootdl@appstate.edu');
 //$result = getUserByID($id);
-var_dump($result);exit;
+//var_dump($result);exit;
 
 //initIDMap();exit;
 
