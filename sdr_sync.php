@@ -124,8 +124,8 @@ function updateRole($member, $banner_id, $sdr_org_id){
       $row = pg_fetch_assoc($result);
       $membership_id = $row['id'];
       
-      if($positions_type_id == OFFICER_TYPE) {
-          switch ($value) 
+      if($position_type_id == OFFICER_TYPE) {
+          switch ($position_id) 
           {
           case '16526':
               $role = PRESIDENT_ROLE;
@@ -159,14 +159,14 @@ function updateRole($member, $banner_id, $sdr_org_id){
           if(pg_num_rows($result) == 0){
               $query = "INSERT INTO sdr_membership_role (membership_id, role_id) VALUES($membership_id, $role)";
               if(!pg_query($query))
-                  $log_str .= "Update Membership Role Error: Failed to insert $value role. query: $query"."\r\n";
+                  $log_str .= "Update Membership Role Error: Failed to insert $position_id role. query: $query"."\r\n";
               if($role != NEW_MEMBER_ROLE){	  
-                  $query = "UPDATE sdr_membership SET administrator=1 WHERE member_id=$key AND organization_id=$sdr_org_id AND term=$current_term";
+                  $query = "UPDATE sdr_membership SET administrator=1 WHERE member_id=$banner_id AND organization_id=$sdr_org_id AND term=$current_term";
                   if(!pg_query($query))
-                      $log_str = "Update Memberhsip Role Error: Failed to update $value to adminstrator. query: $query"."\r\n";	
+                      $log_str = "Update Memberhsip Role Error: Failed to update $position_id to adminstrator. query: $query"."\r\n";	
               }
           }else{
-              $query = "UPDATE sdr_membership_role SET role_id=$role WHERE membership_id=$membership_id";
+              $query = "UPDATE sdr_membership_role SET role_id=$position_id WHERE membership_id=$membership_id";
               if(!pg_query($query))
                   $log_str = "Update Memberhsip Role Error: Failed to update membership role. Membership id = $membership_id. Role = $role. Query: $query"."\r\n";	
           }
