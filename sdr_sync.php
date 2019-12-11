@@ -13,7 +13,6 @@ $key = ENGAGE_API_KEY;
 $base_url = ENGAGE_BASE_URL; 
 $db_user = DB_USER;
 $db_pass = DB_PASS;
-$exclude_orgs = array(95550,878950);  // These are some organizations in OrgSync that really didn't belong as a club or greek organization.  You may not need this 
 $log_file = 'sdr_sync_error.log';
 $role_log_file = 'org_roles_error.log';
 $current_term = "";
@@ -30,17 +29,17 @@ if(!$sdr_term)
   fwrite($log_handle, "Something went wrong setting the current term in mod_settings for sdr. term: $current_term");
 
 // Run main control function
-syncOrganizations();
+//syncOrganizations();
 
 // For testing purposes
 //$testorg = 284356; //test org 284356
 //$result = getOrgMembers($testorg);
 //$result = getUserByBannerID(900799123);
-//$result = getOrgByID($testorg);
+$result = getOrgByID(232015);
 //$result = getOrgPositions($testorg);
 //$id = getIDFromEmail('lightfootdl@appstate.edu');
 //$result = getUserByID($id);
-//var_dump($result);exit;
+var_dump($result);exit;
 
 //initIDMap();exit;
 
@@ -217,7 +216,7 @@ function updateMembership($member_id, $sdr_org_id){
 }
 
 function createOrganization($org){
-  global $log_handle, $current_term, $organization_cats;
+    global $log_handle, $current_term, $organization_cats, $greek_categories;
   $log_str = '';
   $success = TRUE;
   
