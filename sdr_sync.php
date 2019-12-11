@@ -29,17 +29,17 @@ if(!$sdr_term)
   fwrite($log_handle, "Something went wrong setting the current term in mod_settings for sdr. term: $current_term");
 
 // Run main control function
-syncOrganizations();
+//syncOrganizations();
 
 // For testing purposes
-//$testorg = 284356; //test org 284356
+$testorg = 284356; //test org 284356
 //$result = getOrgMembers($testorg);
 //$result = getUserByBannerID(900799123);
-//$result = getOrgByID(232015);
+$result = getOrgByID(232015);
 //$result = getOrgPositions($testorg);
 //$id = getIDFromEmail('lightfootdl@appstate.edu');
 //$result = getUserByID($id);
-//var_dump($result);exit;
+var_dump($result);exit;
 
 //initIDMap();exit;
 
@@ -166,7 +166,7 @@ function updateRole($member, $banner_id, $sdr_org_id){
                       $log_str = "Update Memberhsip Role Error: Failed to update $position_id to adminstrator. query: $query"."\r\n";	
               }
           }else{
-              $query = "UPDATE sdr_membership_role SET role_id=$position_id WHERE membership_id=$membership_id";
+              $query = "UPDATE sdr_membership_role SET role_id=$role WHERE membership_id=$membership_id";
               if(!pg_query($query))
                   $log_str = "Update Memberhsip Role Error: Failed to update membership role. Membership id = $membership_id. Role = $role. Query: $query"."\r\n";	
           }
@@ -177,7 +177,7 @@ function updateRole($member, $banner_id, $sdr_org_id){
       $log_str .= "Successfully updated membership roles.  sdr org id: $sdr_org_id"."\r\n";
   //fwrite($log_handle, $log_str);
   //fwrite($role_log_handle, $org_role_error);
-  echo $log_str;
+  //echo $log_str;
 }
 
 function updateMembership($member_id, $sdr_org_id){
