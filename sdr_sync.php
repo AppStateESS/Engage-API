@@ -18,7 +18,7 @@ $role_log_file = 'org_roles_error.log';
 $current_term = "";
 
 // Open logs for writing
-//$log_handle = fopen($log_file, 'r+');
+$log_handle = fopen($log_file, 'r+');
 //$role_log_handle = fopen($role_log_file, 'r+');
 
 
@@ -43,8 +43,8 @@ syncOrganizations();
 
 //initIDMap();exit;
 
-//fclose($log_handle); // close log file
-//fclose($role_log_handle);
+fclose($log_handle); // close log file
+fclose($role_log_handle);
 
 function syncOrganizations(){
   $dbconn = DBConn("sdr");
@@ -173,11 +173,9 @@ function updateRole($member, $banner_id, $sdr_org_id){
       }
   }
   
-  if($success)
-      $log_str .= "Successfully updated membership roles.  sdr org id: $sdr_org_id"."\r\n";
-  //fwrite($log_handle, $log_str);
-  //fwrite($role_log_handle, $org_role_error);
-  //echo $log_str;
+  //if($success)
+  //    $log_str .= "Successfully updated membership roles.  sdr org id: $sdr_org_id"."\r\n";
+  fwrite($log_handle, $log_str);
 }
 
 function updateMembership($member_id, $sdr_org_id){
@@ -212,8 +210,7 @@ function updateMembership($member_id, $sdr_org_id){
   }
   //if($success)
   //$log_str .= "Successfully updated membership. member id = $member_id, sdr org id: $sdr_org_id"."\r\n";
-  //fwrite($log_handle, $log_str);
-  echo $log_str;
+  fwrite($log_handle, $log_str);
 }
 
 function createOrganization($org){
@@ -309,8 +306,7 @@ function createOrganization($org){
   }
   if($success)
     $log_str .= "Successfully created $long_name.  ID = $org_id"."\r\n";
-  //fwrite($log_handle, $log_str);
-  echo $log_str;
+  fwrite($log_handle, $log_str);
 
   return $sdr_org_id;
 }
@@ -375,8 +371,7 @@ function updateOrganization($org, $sdr_id){
   
   if($success)
     $log_str .= "Successfully updated $long_name.  ID = $org_id"."\r\n";
-  //fwrite($log_handle, $log_str);
-  echo $log_str;
+  fwrite($log_handle, $log_str);
 }
 
 function createUser($user){
@@ -404,8 +399,7 @@ function createUser($user){
   //if($success)
   //$log_str .= "Successfully created member. Banner id: ".$user_vars['banner_id'].", orgsync id: $user->userId";
 
-  //fwrite($log_handle, $log_str);
-  echo $log_str;
+  fwrite($log_handle, $log_str);
 }
 
 function updateUser($user){
@@ -439,8 +433,7 @@ function updateUser($user){
   //if($success)
   //$log_str .= "Successfully updated user. Banner id: ".$user_vars['banner_id'].", appsync id: $user->userId";
 
-  //fwrite($log_handle, $log_str);
-  echo $log_str;
+  fwrite($log_handle, $log_str);
 }
 
 function getUserVars($user){
