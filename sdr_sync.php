@@ -60,6 +60,13 @@ function syncOrganizations(){
                   if(pg_num_rows($result) > 0){ // The organization exists in club connect so update it
                       $row = pg_fetch_assoc($result);
                       $sdr_org_id = $row['sdr_id'];
+                      if(!sdrOrganizationExists($sdr_org_id)) {
+                          $sdr_org_id = createOrganization($org);
+                          $appsync_id = $org->organizationId;
+                          $update_query = " UPDATE sdr_appsync_id_map set sdr_id=$sdr_org_id where appsync_id=$appsync_id";
+                          pg_query($update_query);
+                          echo "created org and updated orgsync id map";
+                      }
                       updateOrganization($org, $sdr_org_id);
                   }else{ // the organization does not exist in club connect so create it.
                       $sdr_org_id = createOrganization($org);
@@ -444,6 +451,16 @@ function updateUser($user){
   //$log_str .= "Successfully updated user. Banner id: ".$user_vars['banner_id'].", appsync id: $user->userId";
 
   fwrite($log_handle, $log_str);
+}
+
+function sdrOrganizationExists($sdr_org_id) {
+    $query = "SELECT * FROM sdr_organization where id=$sdr_org_id";
+    $result = pg_query($query);
+    if(pg_num_rows($result) == 0) {
+        return false;
+    } else {
+        return true;
+    }
 }
 
 function getUserVars($user){
