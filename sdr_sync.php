@@ -33,13 +33,13 @@ syncOrganizations();
 
 // For testing purposes
 //$testorg = 284356; //test org 284356
-//$result = getOrgMembers(259004);
+//$result = getOrgMembers(258884);
 //$result = getUserByBannerID(900799123);
 //$result = getOrgByID(90979);
 //$result = getOrgPositions($testorg);
 //$id = getIDFromEmail('lightfootdl@appstate.edu');
 //$result = getUserByID($id);
-//var_dump($result);
+//var_dump($result);exit;
 
 //initIDMap();exit;
 
@@ -103,9 +103,6 @@ function syncOrgMemberships($org, $sdr_org_id){
           if(!empty($member->positionTemplateId) && !empty($banner_id)) {
               updateRole($member, $banner_id, $sdr_org_id);
           }
-      } else {
-          echo "Removing membership for org: $org->organizationId, sdr id: $sdr_org_id for $username:$banner_id \r\n";
-          removeMembership($banner_id, $sdr_org_id);
       }
   }
 }
