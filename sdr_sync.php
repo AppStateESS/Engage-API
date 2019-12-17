@@ -63,10 +63,10 @@ function syncOrganizations(){
                       if(!sdrOrganizationExists($sdr_org_id)) {
                           $sdr_org_id = createOrganization($org);
                           $appsync_id = $org->organizationId;
-                          $delete_query = "UPDATE sdr_appsync_id_map set sdr_id=0 where sdr_id=$sdr_org_id";
+                          $update_query = "UPDATE sdr_appsync_id_map set sdr_id=0 where sdr_id=$sdr_org_id";
                           pg_query($update_query);
                           $update_query = "UPDATE sdr_appsync_id_map set sdr_id=$sdr_org_id where appsync_id=$appsync_id";
-                          echo "created org and updated orgsync id map for appsync id: $appsync_id ; sdr id: $sdr_org_id";
+                          echo "created org and updated orgsync id map for appsync id: $appsync_id ; sdr id: $sdr_org_id \r\n";
                           pg_query($update_query);
 
                       }
