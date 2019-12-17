@@ -18,7 +18,7 @@ $role_log_file = 'org_roles_error.log';
 $current_term = "";
 
 // Open logs for writing
-$log_handle = fopen($log_file, 'r+');
+$log_handle = fopen($log_file, 'w');
 //$role_log_handle = fopen($role_log_file, 'r+');
 
 
@@ -33,13 +33,13 @@ syncOrganizations();
 
 // For testing purposes
 //$testorg = 284356; //test org 284356
-//$result = getOrgMembers($testorg);
+//$result = getOrgMembers(259004);
 //$result = getUserByBannerID(900799123);
-//$result = getOrgByID(232015);
+//$result = getOrgByID(90979);
 //$result = getOrgPositions($testorg);
 //$id = getIDFromEmail('lightfootdl@appstate.edu');
 //$result = getUserByID($id);
-//var_dump($result);exit;
+//var_dump($result);
 
 //initIDMap();exit;
 
@@ -79,28 +79,34 @@ function syncOrgMemberships($org, $sdr_org_id){
   $members = getOrgMembers($org->organizationId);
 
   foreach($members as $member){
-    $user = getUserByID($member->userId);
-    $username = $user->username;
-    $first_name = $user->firstName;
-    $last_name = $user->lastName;
-    $banner_id = $user->cardId;
-
-    if(!empty($banner_id)){
-        $query = "SELECT * FROM sdr_member WHERE id=$banner_id"; 
-        $result = pg_query($query);
-        if($result && pg_num_rows($result) > 0){
-            updateUser($user);
-        } else {
-            createUser($user);
-        }
-        updateMembership($banner_id, $sdr_org_id);
-    } else {
-        fwrite($log_handle, "Sync Org Memberships Error: Account has no card id. user id: ".$member->userId.", username: $username, first name: $first_name, last name: $last_name"."\r\n");
-    }
-
-    if(!empty($member->positionTemplateId) && !empty($banner_id)) {
-        updateRole($member, $banner_id, $sdr_org_id);
-    }
+      $user = getUserByID($member->userId);
+      $username = $user->username;
+      $first_name = $user->firstName;
+      $last_name = $user->lastName;
+      $banner_id = $user->cardId;
+      
+      if(empty($member->positionRecordedEndDate) && !$member->deleted) {      
+             
+          if(!empty($banner_id)){
+              $query = "SELECT * FROM sdr_member WHERE id=$banner_id"; 
+              $result = pg_query($query);
+              if($result && pg_num_rows($result) > 0){
+                  updateUser($user);
+              } else {
+                  createUser($user);
+              }
+              updateMembership($banner_id, $sdr_org_id);
+          } else {
+              fwrite($log_handle, "Sync Org Memberships Error: Account has no card id. user id: ".$member->userId.", username: $username, first name: $first_name, last name: $last_name"."\r\n");
+          }
+          
+          if(!empty($member->positionTemplateId) && !empty($banner_id)) {
+              updateRole($member, $banner_id, $sdr_org_id);
+          }
+      } else {
+          echo "Removing membership for org: $org->organizationId, sdr id: $sdr_org_id for $username:$banner_id \r\n";
+          removeMembership($banner_id, $sdr_org_id);
+      }
   }
 }
 
@@ -211,6 +217,13 @@ function updateMembership($member_id, $sdr_org_id){
   //if($success)
   //$log_str .= "Successfully updated membership. member id = $member_id, sdr org id: $sdr_org_id"."\r\n";
   fwrite($log_handle, $log_str);
+}
+
+function removeMembership($banner_id, $sdr_org_id) {
+    global $current_term;
+    
+    $query = "DELETE FROM sdr_membership WHERE member_id='$banner_id' AND organization_id='$sdr_org_id' AND term='$current_term'";
+    $result = pg_query($query);
 }
 
 function createOrganization($org){
