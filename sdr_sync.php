@@ -35,7 +35,7 @@ syncOrganizations();
 //$testorg = 284356; //test org 284356
 //$result = getOrgMembers(258884);
 //$result = getUserByBannerID(900799123);
-//$result = getOrgByID(90979);
+//$result = getOrgByID(258889);
 //$result = getOrgPositions($testorg);
 //$id = getIDFromEmail('lightfootdl@appstate.edu');
 //$result = getUserByID($id);
@@ -63,8 +63,10 @@ function syncOrganizations(){
                       if(!sdrOrganizationExists($sdr_org_id)) {
                           $sdr_org_id = createOrganization($org);
                           $appsync_id = $org->organizationId;
-                          $update_query = " UPDATE sdr_appsync_id_map set sdr_id=$sdr_org_id where appsync_id=$appsync_id";
-                          pg_query($update_query);
+                          $delete_query = "DELETE FROM sdr_appsync_id_map where appsync_id=$appsync_id";
+                          pg_query($delete_query);
+                          $delete_query = "DELETE FROM sdr_appsync_id_map where sdr_id=$sdr_org_id";
+                          pg_query($delete_query);
                           echo "created org and updated orgsync id map";
                       }
                       updateOrganization($org, $sdr_org_id);
