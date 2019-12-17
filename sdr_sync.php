@@ -63,11 +63,12 @@ function syncOrganizations(){
                       if(!sdrOrganizationExists($sdr_org_id)) {
                           $sdr_org_id = createOrganization($org);
                           $appsync_id = $org->organizationId;
-                          $delete_query = "DELETE FROM sdr_appsync_id_map where appsync_id=$appsync_id";
-                          pg_query($delete_query);
-                          $delete_query = "DELETE FROM sdr_appsync_id_map where sdr_id=$sdr_org_id";
-                          pg_query($delete_query);
-                          echo "created org and updated orgsync id map";
+                          $delete_query = "UPDATE sdr_appsync_id_map set sdr_id=0 where sdr_id=$sdr_org_id";
+                          pg_query($update_query);
+                          $update_query = "UPDATE sdr_appsync_id_map set sdr_id=$sdr_org_id where appsync_id=$appsync_id";
+                          pg_query($update_query);
+
+                          echo "created org and updated orgsync id map for appsync id: $appsync_id ; sdr id: $sdr_org_id";
                       }
                       updateOrganization($org, $sdr_org_id);
                   }else{ // the organization does not exist in club connect so create it.
@@ -458,10 +459,11 @@ function updateUser($user){
 function sdrOrganizationExists($sdr_org_id) {
     $query = "SELECT * FROM sdr_organization where id=$sdr_org_id";
     $result = pg_query($query);
-    if(pg_num_rows($result) == 0) {
-        return false;
-    } else {
+
+    if(pg_num_rows($result)) {
         return true;
+    } else {
+        return false;
     }
 }
 
