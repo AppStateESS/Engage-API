@@ -178,10 +178,6 @@ function updateRole($member, $banner_id, $sdr_org_id){
                   if(!pg_query($query))
                       $log_str = "Update Memberhsip Role Error: Failed to update $position_id to adminstrator. query: $query"."\r\n";	
               }
-          }else{
-              $query = "UPDATE sdr_membership_role SET role_id=$role WHERE membership_id=$membership_id";
-              if(!pg_query($query))
-                  $log_str = "Update Memberhsip Role Error: Failed to update membership role. Membership id = $membership_id. Role = $role. Query: $query"."\r\n";	
           }
       }
   }
