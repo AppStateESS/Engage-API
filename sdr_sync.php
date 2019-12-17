@@ -66,9 +66,9 @@ function syncOrganizations(){
                           $delete_query = "UPDATE sdr_appsync_id_map set sdr_id=0 where sdr_id=$sdr_org_id";
                           pg_query($update_query);
                           $update_query = "UPDATE sdr_appsync_id_map set sdr_id=$sdr_org_id where appsync_id=$appsync_id";
+                          echo "created org and updated orgsync id map for appsync id: $appsync_id ; sdr id: $sdr_org_id";
                           pg_query($update_query);
 
-                          echo "created org and updated orgsync id map for appsync id: $appsync_id ; sdr id: $sdr_org_id";
                       }
                       updateOrganization($org, $sdr_org_id);
                   }else{ // the organization does not exist in club connect so create it.
