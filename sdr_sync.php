@@ -17,6 +17,16 @@ $log_file = 'sdr_sync_error.log';
 $role_log_file = 'org_roles_error.log';
 $current_term = "";
 
+// For testing purposes
+//$testorg = 284356; //test org 284356
+//$result = getOrgMembers(258889);
+//$result = getUserByBannerID(900799123);
+//$result = getOrgByID(258889);
+//$result = getOrgPositions($testorg);
+//$id = getIDFromEmail('lightfootdl@appstate.edu');
+//$result = getUserByID($id);
+//var_dump($result);exit;
+
 // Open logs for writing
 $log_handle = fopen($log_file, 'w');
 //$role_log_handle = fopen($role_log_file, 'r+');
@@ -30,16 +40,6 @@ if(!$sdr_term)
 
 // Run main control function
 syncOrganizations();
-
-// For testing purposes
-//$testorg = 284356; //test org 284356
-//$result = getOrgMembers(258884);
-//$result = getUserByBannerID(900799123);
-//$result = getOrgByID(258889);
-//$result = getOrgPositions($testorg);
-//$id = getIDFromEmail('lightfootdl@appstate.edu');
-//$result = getUserByID($id);
-//var_dump($result);exit;
 
 //initIDMap();exit;
 
