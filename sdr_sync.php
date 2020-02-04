@@ -20,12 +20,12 @@ $current_term = "";
 // For testing purposes
 //$testorg = 284356; //test org 284356
 //$result = getOrgMembers(258889);
-//$result = getUserByBannerID(900799123);
+//$result = getUserByBannerID(900707546);
 //$result = getOrgByID(258889);
 //$result = getOrgPositions($testorg);
-//$id = getIDFromEmail('lightfootdl@appstate.edu');
-//$result = getUserByID($id);
-//var_dump($result);exit;
+$id = getIDFromEmail('hollingsworthjg@appstate.edu');
+$result = getUserByID($id);
+var_dump($result);exit;
 
 // Open logs for writing
 $log_handle = fopen($log_file, 'w');
@@ -573,9 +573,9 @@ function getOrgMembers($org_id){
     return $org_members;
 }
 
-function getIDFromEmail($email){
+function getIDFromBanner($banner_id){
     $endpoint = "Users/";
-    $query_string = "username=".urlencode($email);
+    $query_string = "username=".urlencode($banner_id);
     $id = FALSE;
     
     $result = curlGet($endpoint, $query_string);
@@ -608,7 +608,7 @@ function getAllUsers(){
 }
 
 
-function getUserByBannerID($banner_id){
+function getUserByCardID($banner_id){
     $endpoint = "Users/";
     $query_string = "cardId=$banner_id";
     $user = FALSE;
