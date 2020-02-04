@@ -223,7 +223,7 @@ function removeGroupAccount($user_ids, $group_id){
  * Add an account to OrgSync.  Remember that you must be setup for SSO and know the proper
  * username format for your university.  Usually is the email but it could be different.
  *
- *
+ * OLD API SCRIPT
  */
 function addAccount($username, $first_name, $last_name, $student_id=NULL, $send_welcome=FALSE){
     global $key, $base_url;
@@ -248,7 +248,7 @@ function addAccount($username, $first_name, $last_name, $student_id=NULL, $send_
 }
 
 /**
- * Remove an account to OrgSync. 
+ * Remove an account to OrgSync. OLD API
  *
  *
  */
@@ -273,9 +273,9 @@ function deleteAccount($account_id){
     }
 }
 
-function getIDFromEmail($email){
+function getIDFromBanner($banner_id){
     $endpoint = "Users/";
-    $query_string = "username=".urlencode($email);
+    $query_string = "username=".urlencode($banner_id);
     $id = FALSE;
     
     $result = curlGet($endpoint, $query_string);
@@ -288,6 +288,7 @@ function getIDFromEmail($email){
     return $id;
 }
 
+// old api. needs to be rewritten
 function getAccountFromEmail($email){
     global $key, $base_url;    
 
@@ -305,24 +306,7 @@ function getAccountFromEmail($email){
     
 }
 
-function getIDFromEmail($email){
-    global $key, $base_url;    
-
-    $curl = curl_init();
-    curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $base_url."accounts/email/$email?key=$key"));
-    $result = curl_exec($curl);
-    curl_close($curl);
-  
-    if($result){
-        $result = json_decode($result);
-        if(!empty($result->id))
-            return $result->id;
-    }
-    
-    return false;
-    
-}
-
+/** OLD API **/
 function getAccountByID($id){
   global $key, $base_url;
   $curl = curl_init();
@@ -338,6 +322,7 @@ function getAccountByID($id){
   return $account_result;
 }
 
+/** OLD API **/
 function getAllAccounts(){
   global $key, $base_url;
   $curl = curl_init();
@@ -375,23 +360,6 @@ function getBannerIDFromEmail($email){
   }else{
     return false;
   }
-}
-
-function getAccountByBannerID($banner_id){
-  global $key, $base_url,$banner_profile_id;
-  $curl = curl_init();
-
-  curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $base_url."accounts/custom_profile/$banner_profile_id/$banner_id?key=$key"));
-  $account_result = curl_exec($curl);
-
-  if($account_result)
-
-      $account_result = json_decode($account_result);
-  else
-    $account_result = FALSE;
-  curl_close($curl);  
-  return $account_result;
-
 }
 
 /**
