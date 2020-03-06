@@ -82,21 +82,6 @@ function userToGroup($user_id, $group_id){
 
 }
 
-function getGroupMembers($group_id) {
-  global $key, $base_url;
-  $curl = curl_init();
-  //get organization members by organization id
-  curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $base_url."groups/$group_id/accounts?key=$key"));
-  $group_members = curl_exec($curl);
-  if($group_members){
-    $group_members = json_decode($group_members);
-  }else{
-    $group_members = FALSE;
-  }
-  curl_close($curl);
-  return $group_members;
-}
-
 function getAllOrganizations(){
     $endpoint = "Organizations";
     $query_string = "pageSize=500";
@@ -111,8 +96,24 @@ function getAllOrganizations(){
             $all_orgs = $result->items;
         }
     }
-
     return $all_orgs;
+}
+
+function getOrgPositions($org_id){
+    $endpoint = "Positions";
+    $query_string = "organizationId=$org_id";
+    $result = curlGet($endpoint, $query_string);
+
+    if($result && !empty($result->items)){
+        $total_pages = $result->totalPages;
+        if($total_pages > 1){
+            $positions = combinePages($endpoint, $query_string);
+        } else {
+            $positions = $result->items;
+        }
+    }
+
+    return $positions;
 }
 
 function getOrgByID($org_id){
@@ -288,55 +289,42 @@ function getIDFromBanner($banner_id){
     return $id;
 }
 
-// old api. needs to be rewritten
-function getAccountFromEmail($email){
-    global $key, $base_url;    
+function getAllUsers(){
+    $endpoint = "Users";
+    $query_string = "pageSize=500";
+    $all_members = FALSE;
+    
+    $result = curlGet($endpoint, $query_string);
 
-    $curl = curl_init();
-    curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $base_url."accounts/email/$email?key=$key"));
-    $result = curl_exec($curl);
-    curl_close($curl);
-  
-    if($result){
-        $result = json_decode($result);
-        return $result;
+    if($result && !empty($result->items)){
+        $total_pages = $result->totalPages;
+
+        if($total_pages > 1){
+            $all_members = combinePages($endpoint, $query_string);
+        } else {
+            $all_members = $result->items;
+        }
     }
-    
-    return false;
-    
+    return $all_members;
 }
 
-/** OLD API **/
-function getAccountByID($id){
-  global $key, $base_url;
-  $curl = curl_init();
-  curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $base_url."accounts/$id?key=$key"));
-    $account_result = curl_exec($curl);
+function getUserByCardID($banner_id){
+    $endpoint = "Users/";
+    $query_string = "cardId=$banner_id";
+    $user = FALSE;
     
-  if($account_result)
-    $account_result = json_decode($account_result);
-  else
-    $account_result = FALSE;
-  
-  curl_close($curl);  
-  return $account_result;
+    $result = curlGet($endpoint, $query_string);
+
+    if(!empty($result->items)) {
+        $user = $result->items;
+    }
+
+    return $user;    
 }
 
-/** OLD API **/
-function getAllAccounts(){
-  global $key, $base_url;
-  $curl = curl_init();
-  //Request list of all accounts
-  curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $base_url."accounts?key=$key"));
-  $all_accounts = curl_exec($curl);
-  if($all_accounts){
-    $all_accounts = json_decode($all_accounts);
-  }else{
-    $all_accounts = FALSE;
-  }
-
-  return $all_accounts;
-  curl_close($curl);
+function getUserByID($id){
+    $endpoint = "Users/$id";
+    return curlGet($endpoint);
 }
 
 /**
@@ -400,88 +388,6 @@ function getAllStudentsFromBanner(){
     return $students;
 }
 
-function getIDCardByAccountID($account_id){
-  global $key, $base_url;
-  $curl = curl_init();
-  curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $base_url."identification_cards/account_id/$account_id?key=$key"));
-    $card_result = curl_exec($curl);
-    
-  if($card_result)
-    $card_result = json_decode($card_result);
-  else
-    $card_result = FALSE;
-  
-  curl_close($curl);  
-  return $card_result;
-}
-
-function getIDCardByID($id){
-  global $key, $base_url;
-  $curl = curl_init();
-  curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $base_url."identification_cards/$id?key=$key"));
-    $card_result = curl_exec($curl);
-    
-  if($card_result)
-    $card_result = json_decode($card_result);
-  else
-    $card_result = FALSE;
-  
-  curl_close($curl);  
-  return $card_result;
-}
-
-function getIDCardByBannerID($banner_id){
-  global $key, $base_url;
-  $curl = curl_init();
-  curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $base_url."identification_cards/number/$banner_id?key=$key"));
-    $card_result = curl_exec($curl);
-    
-  if($card_result)
-    $card_result = json_decode($card_result);
-  else
-    $card_result = FALSE;
-  
-  curl_close($curl);  
-  return $card_result;
-}
-
-function addIDCard($account_id, $banner_id){
-  global $key, $base_url;
-
-    $json_data = array("account_id" => $account_id, "number" => $banner_id);
-    $json_data = json_encode($json_data);
-    $url = $base_url."/identification_cards?account_id=$account_id&number=$banner_id&key=$key";
-    $curl = curl_init();
-    curl_setopt_array($curl, array(CURLOPT_TIMEOUT => 900, CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $url, CURLOPT_POST => 1, CURLOPT_POSTFIELDS => $json_data));           
-    $card_result = curl_exec($curl);
-    
-  if($card_result)
-    $card_result = json_decode($card_result);
-  else
-    $card_result = FALSE;
-  
-  curl_close($curl);  
-  return $card_result;
-}
-
-function removeIDCard($card_id){
-    global $key, $base_url;
-    
-    $url = $base_url."/identification_cards/$card_id?key=$key";
-    $curl = curl_init();
-    curl_setopt_array($curl, array(CURLOPT_CUSTOMREQUEST => "DELETE", CURLOPT_TIMEOUT => 900, CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $url));           
-    $result = curl_exec($curl); 
-    curl_close($curl);
-    if($result){
-        $result = json_decode($result);
-        if(!property_exists($result, 'message')){
-            return TRUE;
-        }else{
-            return FALSE;
-        }
-    }
-}
-
 function combinePages($endpoint, $query_string) {
     $result = curlGet($endpoint, $query_string);
     $combined = array();
@@ -515,6 +421,58 @@ function curlGet($endpoint, $query_string="") {
     $result = curl_exec($curl);
     curl_close($curl);
     return json_decode($result);
+}
+
+//////////////////////// OLD API FUNCTIONS //////////////////////////
+// old api. needs to be rewritten
+function getAccountFromEmail($email){
+    global $key, $base_url;    
+
+    $curl = curl_init();
+    curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $base_url."accounts/email/$email?key=$key"));
+    $result = curl_exec($curl);
+    curl_close($curl);
+  
+    if($result){
+        $result = json_decode($result);
+        return $result;
+    }
+    
+    return false;
+    
+}
+
+/** OLD API **/
+function getAccountByID($id){
+  global $key, $base_url;
+  $curl = curl_init();
+  curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $base_url."accounts/$id?key=$key"));
+    $account_result = curl_exec($curl);
+    
+  if($account_result)
+    $account_result = json_decode($account_result);
+  else
+    $account_result = FALSE;
+  
+  curl_close($curl);  
+  return $account_result;
+}
+
+/** OLD API **/
+function getAllAccounts(){
+  global $key, $base_url;
+  $curl = curl_init();
+  //Request list of all accounts
+  curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $base_url."accounts?key=$key"));
+  $all_accounts = curl_exec($curl);
+  if($all_accounts){
+    $all_accounts = json_decode($all_accounts);
+  }else{
+    $all_accounts = FALSE;
+  }
+
+  return $all_accounts;
+  curl_close($curl);
 }
 
 ?>

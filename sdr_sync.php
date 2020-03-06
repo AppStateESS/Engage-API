@@ -23,9 +23,10 @@ $current_term = "";
 //$result = getUserByBannerID(900707546);
 //$result = getOrgByID(258889);
 //$result = getOrgPositions($testorg);
-$id = getIDFromEmail('hollingsworthjg@appstate.edu');
-$result = getUserByID($id);
-var_dump($result);exit;
+//$id = getIDFromBanner('campusactivities@appstate.edu');
+//$result = getUserByID($id);
+//var_dump($result);exit;
+//$result = getAllUsers();
 
 // Open logs for writing
 $log_handle = fopen($log_file, 'w');
