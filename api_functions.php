@@ -140,6 +140,134 @@ function getOrgMembers($org_id){
     return $org_members;
 }
 
+function getIDFromBanner($banner_id){
+    $endpoint = "Users/";
+    $query_string = "username=".urlencode($banner_id);
+    $id = FALSE;
+    
+    $result = curlGet($endpoint, $query_string);
+
+    if(!empty($result->items)) {
+        $user = $result->items;
+        $id = $user[0]->userId;
+    }
+
+    return $id;
+}
+
+function getAllUsers(){
+    $endpoint = "Users";
+    $query_string = "pageSize=500";
+    $all_members = FALSE;
+    
+    $result = curlGet($endpoint, $query_string);
+
+    if($result && !empty($result->items)){
+        $total_pages = $result->totalPages;
+
+        if($total_pages > 1){
+            $all_members = combinePages($endpoint, $query_string);
+        } else {
+            $all_members = $result->items;
+        }
+    }
+    return $all_members;
+}
+
+function getUserByCardID($banner_id){
+    $endpoint = "Users/";
+    $query_string = "cardId=$banner_id";
+    $user = FALSE;
+    
+    $result = curlGet($endpoint, $query_string);
+
+    if(!empty($result->items)) {
+        $user = $result->items;
+    }
+
+    return $user;    
+}
+
+function getUserByID($id){
+    $endpoint = "Users/$id";
+    return curlGet($endpoint);
+}
+
+/**
+ * This retrieves a student from banner by banner id
+ * @global type $banner_base_url
+ * @param type $email
+ * @param type $banner_id
+ * @return student object
+ */
+function getStudentFromBanner($email, $banner_id){
+    global $banner_base_url;
+    if(empty($banner_id)){
+        $email = explode('@',$email);
+        $user_id = $email[0];
+    }else{
+        $user_id = $banner_id;
+    }
+    $curl = curl_init();
+    curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $banner_base_url."student/$user_id"));
+    $result = curl_exec($curl);
+    curl_close($curl);
+    $student = json_decode($result);
+    return $student;
+}
+
+/**
+ * This retrieves all students from banner
+ * @global type $banner_base_url
+ * @return student list
+ */
+function getAllStudentsFromBanner(){
+    global $banner_base_url;
+    $curl = curl_init();
+    curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $banner_base_url."student"));
+    $result = curl_exec($curl);
+    curl_close($curl);
+    $students = json_decode($result);
+    return $students;
+}
+
+function combinePages($endpoint, $query_string) {
+    $result = curlGet($endpoint, $query_string);
+    $combined = array();
+    if(!empty($query_string)) {
+        $query_string .= "&";
+    }
+
+    if($result) {
+        $totalPages = $result->totalPages;
+        for($i = 1; $i <= $totalPages; $i++) {
+            $page = curlGet($endpoint, $query_string."page=$i");
+            $combined = array_merge($combined, $page->items);
+        }
+    } else {
+        return false;
+    }
+
+    return $combined;
+}
+
+function curlGet($endpoint, $query_string="") {
+    global $key, $base_url;
+    if(!empty($query_string)){
+        $query_string = "?$query_string";
+    }
+    $curl = curl_init();
+    curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $base_url.$endpoint.$query_string));
+    curl_setopt($curl, CURLOPT_HTTPHEADER, array(
+        'Accept: application/json',
+        'X-Engage-Api-Key: ' . $key));
+    $result = curl_exec($curl);
+    curl_close($curl);
+    return json_decode($result);
+}
+
+//////////////////////// OLD API FUNCTIONS //////////////////////////
+
 /**
  * Remove an account or multiple accounts from an organization.  $ids can be one id or and array of ids.
  *
@@ -274,156 +402,6 @@ function deleteAccount($account_id){
     }
 }
 
-function getIDFromBanner($banner_id){
-    $endpoint = "Users/";
-    $query_string = "username=".urlencode($banner_id);
-    $id = FALSE;
-    
-    $result = curlGet($endpoint, $query_string);
-
-    if(!empty($result->items)) {
-        $user = $result->items;
-        $id = $user[0]->userId;
-    }
-
-    return $id;
-}
-
-function getAllUsers(){
-    $endpoint = "Users";
-    $query_string = "pageSize=500";
-    $all_members = FALSE;
-    
-    $result = curlGet($endpoint, $query_string);
-
-    if($result && !empty($result->items)){
-        $total_pages = $result->totalPages;
-
-        if($total_pages > 1){
-            $all_members = combinePages($endpoint, $query_string);
-        } else {
-            $all_members = $result->items;
-        }
-    }
-    return $all_members;
-}
-
-function getUserByCardID($banner_id){
-    $endpoint = "Users/";
-    $query_string = "cardId=$banner_id";
-    $user = FALSE;
-    
-    $result = curlGet($endpoint, $query_string);
-
-    if(!empty($result->items)) {
-        $user = $result->items;
-    }
-
-    return $user;    
-}
-
-function getUserByID($id){
-    $endpoint = "Users/$id";
-    return curlGet($endpoint);
-}
-
-/**
- * Get banner id from orgsync by email address
- * 
- * @param type $email
- * @return boolean
- */
-function getBannerIDFromEmail($email){
-  $parts = explode("@", $email);
-  $username = strtolower($parts[0]);
-  if(!empty($username)){
-    $query = "SELECT * FROM sdr_member WHERE username='$username' ORDER BY id DESC";
-    $result = pg_query($query);
-    if($result && pg_num_rows($result) > 0){
-      $row = pg_fetch_assoc($result);
-      return $row['id'];
-    }else{
-      return false;
-    }
-  }else{
-    return false;
-  }
-}
-
-/**
- * This retrieves a student from banner by banner id
- * @global type $banner_base_url
- * @param type $email
- * @param type $banner_id
- * @return student object
- */
-function getStudentFromBanner($email, $banner_id){
-    global $banner_base_url;
-    if(empty($banner_id)){
-        $email = explode('@',$email);
-        $user_id = $email[0];
-    }else{
-        $user_id = $banner_id;
-    }
-    $curl = curl_init();
-    curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $banner_base_url."student/$user_id"));
-    $result = curl_exec($curl);
-    curl_close($curl);
-    $student = json_decode($result);
-    return $student;
-}
-
-/**
- * This retrieves all students from banner
- * @global type $banner_base_url
- * @return student list
- */
-function getAllStudentsFromBanner(){
-    global $banner_base_url;
-    $curl = curl_init();
-    curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $banner_base_url."student"));
-    $result = curl_exec($curl);
-    curl_close($curl);
-    $students = json_decode($result);
-    return $students;
-}
-
-function combinePages($endpoint, $query_string) {
-    $result = curlGet($endpoint, $query_string);
-    $combined = array();
-    if(!empty($query_string)) {
-        $query_string .= "&";
-    }
-
-    if($result) {
-        $totalPages = $result->totalPages;
-        for($i = 1; $i <= $totalPages; $i++) {
-            $page = curlGet($endpoint, $query_string."page=$i");
-            $combined = array_merge($combined, $page->items);
-        }
-    } else {
-        return false;
-    }
-
-    return $combined;
-}
-
-function curlGet($endpoint, $query_string="") {
-    global $key, $base_url;
-    if(!empty($query_string)){
-        $query_string = "?$query_string";
-    }
-    $curl = curl_init();
-    curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $base_url.$endpoint.$query_string));
-    curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-        'Accept: application/json',
-        'X-Engage-Api-Key: ' . $key));
-    $result = curl_exec($curl);
-    curl_close($curl);
-    return json_decode($result);
-}
-
-//////////////////////// OLD API FUNCTIONS //////////////////////////
 // old api. needs to be rewritten
 function getAccountFromEmail($email){
     global $key, $base_url;    

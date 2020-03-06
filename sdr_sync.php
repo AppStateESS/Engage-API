@@ -8,6 +8,7 @@
    */
 
 include ("/etc/ess/sdr_sync.conf");
+include ("api_functions.php");
 
 $key = ENGAGE_API_KEY;
 $base_url = ENGAGE_BASE_URL; 
@@ -515,119 +516,6 @@ function getUserVars($user){
   return $user_vars;
 }
 
-function getAllOrganizations(){
-    $endpoint = "Organizations";
-    $query_string = "pageSize=500";
-    $result = curlGet($endpoint, $query_string);
-    $all_orgs = FALSE;
-    
-    if($result && !empty($result->items)){
-        $total_pages = $result->totalPages;
-        if($total_pages > 1){
-            $all_orgs = combinePages($endpoint, $query_string);
-        } else {
-            $all_orgs = $result->items;
-        }
-    }
-
-    return $all_orgs;
-}
-
-function getOrgPositions($org_id){
-    $endpoint = "Positions";
-    $query_string = "organizationId=$org_id";
-    $result = curlGet($endpoint, $query_string);
-
-    if($result && !empty($result->items)){
-        $total_pages = $result->totalPages;
-        if($total_pages > 1){
-            $positions = combinePages($endpoint, $query_string);
-        } else {
-            $positions = $result->items;
-        }
-    }
-
-    return $positions;
-}
-
-function getOrgByID($org_id){
-    $endpoint = "Organizations/$org_id";
-    //get organization by orgsync id
-    return curlGet($endpoint);
-}
-
-function getOrgMembers($org_id){
-    $endpoint = "Memberships";
-    $query_string = "pageSize=500&organizationId=$org_id";
-    //get organization members by organization id
-    $org_members = FALSE;
-    $result = curlGet($endpoint, $query_string);
-    
-    if($result && !empty($result->items)){
-        $total_pages = $result->totalPages;
-        if($total_pages > 1){
-            $org_members = combinePages($endpoint, $query_string);
-        } else {
-            $org_members = $result->items;
-        }
-    }
-    return $org_members;
-}
-
-function getIDFromBanner($banner_id){
-    $endpoint = "Users/";
-    $query_string = "username=".urlencode($banner_id);
-    $id = FALSE;
-    
-    $result = curlGet($endpoint, $query_string);
-
-    if(!empty($result->items)) {
-        $user = $result->items;
-        $id = $user[0]->userId;
-    }
-
-    return $id;
-}
-
-function getAllUsers(){
-    $endpoint = "Users";
-    $query_string = "pageSize=500";
-    $all_members = FALSE;
-    
-    $result = curlGet($endpoint, $query_string);
-
-    if($result && !empty($result->items)){
-        $total_pages = $result->totalPages;
-
-        if($total_pages > 1){
-            $all_members = combinePages($endpoint, $query_string);
-        } else {
-            $all_members = $result->items;
-        }
-    }
-    return $all_members;
-}
-
-
-function getUserByCardID($banner_id){
-    $endpoint = "Users/";
-    $query_string = "cardId=$banner_id";
-    $user = FALSE;
-    
-    $result = curlGet($endpoint, $query_string);
-
-    if(!empty($result->items)) {
-        $user = $result->items;
-    }
-
-    return $user;    
-}
-
-function getUserByID($id){
-    $endpoint = "Users/$id";
-    return curlGet($endpoint);
-}
-
 function getBannerIDFromEmail($email){
   $parts = explode("@", $email);
   $username = strtolower($parts[0]);
@@ -795,41 +683,6 @@ function getOrgsyncNewAccount(){
     
   }
   pg_close($dbconn);
-}
-
-function combinePages($endpoint, $query_string) {
-    $result = curlGet($endpoint, $query_string);
-    $combined = array();
-    if(!empty($query_string)) {
-        $query_string .= "&";
-    }
-
-    if($result) {
-        $totalPages = $result->totalPages;
-        for($i = 1; $i <= $totalPages; $i++) {
-            $page = curlGet($endpoint, $query_string."page=$i");
-            $combined = array_merge($combined, $page->items);
-        }
-    } else {
-        return false;
-    }
-
-    return $combined;
-}
-
-function curlGet($endpoint, $query_string="") {
-    global $key, $base_url;
-    if(!empty($query_string)){
-        $query_string = "?$query_string";
-    }
-    $curl = curl_init();
-    curl_setopt_array($curl, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $base_url.$endpoint.$query_string));
-    curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-        'Accept: application/json',
-        'X-Engage-Api-Key: ' . $key));
-    $result = curl_exec($curl);
-    curl_close($curl);
-    return json_decode($result);
 }
 
 function DBConn($db){
