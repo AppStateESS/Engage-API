@@ -33,7 +33,6 @@ $current_term = "";
 $log_handle = fopen($log_file, 'w');
 //$role_log_handle = fopen($role_log_file, 'r+');
 
-
 $sdr_term = setCurrentTerm();
 
 // Update the current term in SDR
@@ -95,7 +94,10 @@ function syncOrgMemberships($org, $sdr_org_id){
       $username = $user->username;
       $first_name = $user->firstName;
       $last_name = $user->lastName;
-      $banner_id = $user->cardId;
+      $banner_id = $user->username;
+      if(substr($banner_id, 0, 3) != "900") {
+        $banner_id = $user->cardId;
+      }
       
       if(empty($member->positionRecordedEndDate) && !$member->deleted) {      
              
