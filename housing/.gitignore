@@ -3,6 +3,7 @@
 .#*
 \#*\#
 conf/config.php
+class/curl.example.php
 error.txt
 log.txt
 nbproject/
