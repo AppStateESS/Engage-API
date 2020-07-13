@@ -7,8 +7,12 @@ class Curl {
     public $curl;
     public $id = null;
 
-    public $response = null;
     public $url = null;
+    public $requestHeaders = null;
+    public $responseHeaders = null;
+    public $rawResponseHeaders = '';
+    public $responseCookies = array();
+    public $response = null;
 
     public $error = false;
     public $errorCode = 0;
@@ -84,12 +88,24 @@ class Curl {
         $this->error = $this->curlError || $this->httpError;
         $this->errorCode = $this->error ? ($this->curlError ? $this->curlErrorCode : $this->httpStatusCode) : 0;
 
+        // NOTE: CURLINFO_HEADER_OUT set to true is required for requestHeaders
+        // to not be empty (e.g. $curl->setOpt(CURLINFO_HEADER_OUT, true);).
+        if ($this->getOpt(CURLINFO_HEADER_OUT) === true) {
+            $this->requestHeaders = $this->parseRequestHeaders($this->getInfo(CURLINFO_HEADER_OUT));
+        }
+        $this->responseHeaders = $this->parseResponseHeaders($this->rawResponseHeaders);
+        $this->response = $this->parseResponse($this->responseHeaders, $this->rawResponse);
+
+        $this->httpErrorMessage = '';
+        if ($this->error) {
+            if (isset($this->responseHeaders['Status-Line'])) {
+                $this->httpErrorMessage = $this->responseHeaders['Status-Line'];
+            }
+        }
         $this->errorMessage = $this->curlError ? $this->curlErrorMessage : $this->httpErrorMessage;
 
         // Reset nobody setting possibly set from a HEAD request.
         $this->setOpt(CURLOPT_NOBODY, false);
-
-        $this->execDone();
 
         return $this->response;
     }
