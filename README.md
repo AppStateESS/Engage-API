@@ -1,1 +1,1 @@
-# OrgSync-API
+# Campus Labs - API
