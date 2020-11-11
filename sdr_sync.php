@@ -33,7 +33,6 @@ $current_term = "";
 $log_handle = fopen($log_file, 'w');
 //$role_log_handle = fopen($role_log_file, 'r+');
 
-
 $sdr_term = setCurrentTerm();
 
 // Update the current term in SDR
@@ -97,11 +96,10 @@ function syncOrgMemberships($org, $sdr_org_id){
       $last_name = $user->lastName;
       $banner_id = $user->username;
       if(substr($banner_id, 0, 3) != "900") {
-	$banner_id = $user->cardId;
+        $banner_id = $user->cardId;
       }
       
       if(empty($member->positionRecordedEndDate) && !$member->deleted) {      
-	/**             
           if(!empty($banner_id)){
               $query = "SELECT * FROM sdr_member WHERE id=$banner_id"; 
               $result = pg_query($query);
@@ -114,7 +112,6 @@ function syncOrgMemberships($org, $sdr_org_id){
           } else {
               fwrite($log_handle, "Sync Org Memberships Error: Account has no card id. user id: ".$member->userId.", username: $username, first name: $first_name, last name: $last_name"."\r\n");
           }
-	*/
           if(!empty($member->positionTemplateId) && !empty($banner_id)) {
               updateRole($member, $banner_id, $sdr_org_id);
           }
