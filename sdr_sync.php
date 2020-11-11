@@ -98,7 +98,7 @@ function syncOrgMemberships($org, $sdr_org_id){
       if(substr($banner_id, 0, 3) != "900") {
         $banner_id = $user->cardId;
       }
-      
+      /**      
       if(empty($member->positionRecordedEndDate) && !$member->deleted) {      
           if(!empty($banner_id)){
               $query = "SELECT * FROM sdr_member WHERE id=$banner_id"; 
@@ -112,15 +112,16 @@ function syncOrgMemberships($org, $sdr_org_id){
           } else {
               fwrite($log_handle, "Sync Org Memberships Error: Account has no card id. user id: ".$member->userId.", username: $username, first name: $first_name, last name: $last_name"."\r\n");
           }
+      */
           if(!empty($member->positionTemplateId) && !empty($banner_id)) {
               updateRole($member, $banner_id, $sdr_org_id);
           }
-      }
+	  //      }
   }
 }
 
 function updateRole($member, $banner_id, $sdr_org_id){
-  global $log_handle, $role_log_handle, $current_term;
+  global $log_handle, $role_log_handle, $current_term, $officer_types;
   $org_role_error = '';
   $log_str = '';
   $success = TRUE;
