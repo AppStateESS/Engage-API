@@ -95,10 +95,13 @@ function syncOrgMemberships($org, $sdr_org_id){
       $username = $user->username;
       $first_name = $user->firstName;
       $last_name = $user->lastName;
-      $banner_id = $user->cardId;
+      $banner_id = $user->username;
+      if(substr($banner_id, 0, 3) != "900") {
+	$banner_id = $user->cardId;
+      }
       
       if(empty($member->positionRecordedEndDate) && !$member->deleted) {      
-             
+	/**             
           if(!empty($banner_id)){
               $query = "SELECT * FROM sdr_member WHERE id=$banner_id"; 
               $result = pg_query($query);
@@ -111,7 +114,7 @@ function syncOrgMemberships($org, $sdr_org_id){
           } else {
               fwrite($log_handle, "Sync Org Memberships Error: Account has no card id. user id: ".$member->userId.", username: $username, first name: $first_name, last name: $last_name"."\r\n");
           }
-          
+	*/
           if(!empty($member->positionTemplateId) && !empty($banner_id)) {
               updateRole($member, $banner_id, $sdr_org_id);
           }
@@ -173,19 +176,23 @@ function updateRole($member, $banner_id, $sdr_org_id){
           $result = pg_query($query);
           if(pg_num_rows($result) == 0){
               $query = "INSERT INTO sdr_membership_role (membership_id, role_id) VALUES($membership_id, $role)";
-              if(!pg_query($query))
+              if(!pg_query($query)){
                   $log_str .= "Update Membership Role Error: Failed to insert $position_id role. query: $query"."\r\n";
+		  $success = false;
+	      }
               if($role != NEW_MEMBER_ROLE){	  
                   $query = "UPDATE sdr_membership SET administrator=1 WHERE member_id=$banner_id AND organization_id=$sdr_org_id AND term=$current_term";
-                  if(!pg_query($query))
+                  if(!pg_query($query)) {
                       $log_str = "Update Memberhsip Role Error: Failed to update $position_id to adminstrator. query: $query"."\r\n";	
+		      $success = false;
+		  }
               }
           }
       }
   }
   
-  //if($success)
-  //    $log_str .= "Successfully updated membership roles.  sdr org id: $sdr_org_id"."\r\n";
+  if($success)
+    $log_str .= "Successfully updated membership role for banner id: $banner_id.  sdr org id: $sdr_org_id"."\r\n";
   fwrite($log_handle, $log_str);
 }
 
