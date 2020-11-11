@@ -139,7 +139,7 @@ function updateRole($member, $banner_id, $sdr_org_id){
       $row = pg_fetch_assoc($result);
       $membership_id = $row['id'];
       
-      if($position_type_id == OFFICER_TYPE) {
+      if(in_array($position_type_id, $officer_types)) {
           switch ($position_id) 
           {
           case '16526':
@@ -149,7 +149,7 @@ function updateRole($member, $banner_id, $sdr_org_id){
               $role = VP_ROLE;
               break;
           case '16529':
-              $role = SECRETARY;
+              $role = SECRETARY_ROLE;
               break;
           case '16530':
               $role = TREASURER_ROLE;
