@@ -98,7 +98,7 @@ function syncOrgMemberships($org, $sdr_org_id){
       if(substr($banner_id, 0, 3) != "900") {
         $banner_id = $user->cardId;
       }
-      /**      
+
       if(empty($member->positionRecordedEndDate) && !$member->deleted) {      
           if(!empty($banner_id)){
               $query = "SELECT * FROM sdr_member WHERE id=$banner_id"; 
@@ -112,11 +112,11 @@ function syncOrgMemberships($org, $sdr_org_id){
           } else {
               fwrite($log_handle, "Sync Org Memberships Error: Account has no card id. user id: ".$member->userId.", username: $username, first name: $first_name, last name: $last_name"."\r\n");
           }
-      */
+
           if(!empty($member->positionTemplateId) && !empty($banner_id)) {
               updateRole($member, $banner_id, $sdr_org_id);
           }
-	  //      }
+      }
   }
 }
 
@@ -128,9 +128,17 @@ function updateRole($member, $banner_id, $sdr_org_id){
   $position_id = $member->positionTemplateId;
   $position_type_id = $member->positionTypeId;
   $role = null;
-  
+  $now = time();
+  $end_date = $member->positionRecordedEndDate;
+  if(!empty($end_date)){
+    $end_date = $end_date/1000;
+  }
+  if(!empty($end_date) && $end_date < $now){
+    return;
+  }
+
   // Check if the position template id = new member
-  if($position_id == '21019'){
+  if($position_id == '21019') {
       $role = NEW_MEMBER_ROLE;
   }
   
