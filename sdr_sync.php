@@ -155,7 +155,7 @@ function updateRole($member, $banner_id, $sdr_org_id){
           } elseif(in_array($position_id, $vice_presidents)) {
               $role = VP_ROLE;
           } elseif(in_array($position_id, $secretaries)) {
-              $role = SECRETARY;
+              $role = SECRETARY_ROLE;
           } elseif(in_array($position_id, $treasurers)) {
               $role = TREASURER_ROLE;
           } elseif(in_array($position_id, $advisors)) {
