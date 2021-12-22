@@ -121,7 +121,7 @@ function syncOrgMemberships($org, $sdr_org_id){
 }
 
 function updateRole($member, $banner_id, $sdr_org_id){
-    global $log_handle, $role_log_handle, $current_term, $officer_types, $presidents, $vice_presidents, $secretaries, $tresurers, $advisors, $chairs;
+    global $log_handle, $role_log_handle, $current_term, $officer_types, $presidents, $vice_presidents, $secretaries, $treasurers, $advisors, $chairs;
   $org_role_error = '';
   $log_str = '';
   $success = TRUE;
