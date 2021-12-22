@@ -138,7 +138,7 @@ function updateRole($member, $banner_id, $sdr_org_id){
   }
 
   // Check if the position template id = new member
-  if($position_id == '21019') {
+  if($position_id == '21019' || $position_id == '26134') { // new member position id for clubs and orgs or frat and soro
       $role = NEW_MEMBER_ROLE;
   }
   
@@ -149,31 +149,19 @@ function updateRole($member, $banner_id, $sdr_org_id){
       $membership_id = $row['id'];
       
       if(in_array($position_type_id, $officer_types)) {
-          switch ($position_id) 
-          {
-          case '16526':
+          $role = OFFICER_ROLE;
+          if(in_array($position_id, $presidents)) {
               $role = PRESIDENT_ROLE;
-              break;
-          case '16528':
+          } elseif(in_array($position_id, $vice_presidents)) {
               $role = VP_ROLE;
-              break;
-          case '16529':
-              $role = SECRETARY_ROLE;
-              break;
-          case '16530':
+          } elseif(in_array($position_id, $secretaries)) {
+              $role = SECRETARY;
+          } elseif(in_array($position_id, $treasurers)) {
               $role = TREASURER_ROLE;
-              break;
-          case '16527':
+          } elseif(in_array($position_id, $advisors)) {
               $role = ADVISOR_ROLE;
-              break;
-          case '16533':
-          case '16532':
-          case '16531':
+          } elseif(in_array($position_id, $chairs)) {
               $role = CHAIR;
-              break;
-          default:
-              $role = OFFICER_ROLE;
-              break;
           }
       }
 
