@@ -53,7 +53,7 @@ function syncOrganizations(){
   $orgs = getAllOrganizations();
   
   foreach($orgs as $org){
-      if($org->parentId == CSIL_ID){
+      if($org->parentId == CSIL_ID || $org->parentId == FRATERNITY_SORORITY){
           if(!in_array($org->organizationId, $exclude_orgs)){
               if($org->status == "Active"){
                   $query = "SELECT * FROM sdr_appsync_id_map WHERE appsync_id=$org->organizationId";
